@@ -25,22 +25,38 @@ The script contains **no write, modify, or exploitation commands**. It relies ex
        alt="TuxAudit Dashboard"
        width="900">
 </a>
+<br> <br>
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Security_dashboard_light.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Security_dashboard_light.jpg"
+       alt="TuxAudit Dashboard"
+       width="900">
+</a>
 
 ### MITRE Matrix
 
-<a href="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Mitre.jpg">
-  <img src="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Mitre.jpg"
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Mitre.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Mitre.jpg"
        alt="TuxAudit MITRE Matrix"
        width="900">
 </a>
 
 ### Remediation
 
-<a href="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Remediation.jpg">
-  <img src="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Remediation.jpg"
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Remediation.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Remediation.jpg"
        alt="TuxAudit Remediation"
        width="900">
 </a>
+
+### Audit Logs
+
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Audit_logs2.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Audit_logs2.jpg"
+       alt="TuxAudit Remediation"
+       width="900">
+</a>
+
+
 
 ---
 
