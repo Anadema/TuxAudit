@@ -4,8 +4,8 @@
 
 ---
 
-<a href="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Menu.jpg">
-  <img src="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Menu.jpg"
+<a href="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/bash.jpg">
+  <img src="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/bash.jpg"
        alt="TuxAudit Menu"
        width="500">
 </a>
