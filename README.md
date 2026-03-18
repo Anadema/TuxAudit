@@ -3,7 +3,12 @@
 > **Linux configuration audit and security review tool — for ethical and defensive use only.**
 
 ---
-
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/bashmenu.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/bashmenu.jpg"
+       alt="TuxAudit Menu"
+       width="500">
+</a>
+<br> <br>
 <a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/bash.jpg">
   <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/bash.jpg"
        alt="TuxAudit Menu"
