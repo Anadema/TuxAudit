@@ -1,0 +1,2539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TuxAudit v1.0 -- raspberrypi -- 2026-03-18</title>
+<style>
+:root {
+  --bg:        #0d1117;
+  --bg2:       #161b22;
+  --bg3:       #21262d;
+  --bg4:       #2d333b;
+  --border:    #30363d;
+  --accent:    #58a6ff;
+  --accent2:   #3fb950;
+  --warn:      #d29922;
+  --danger:    #f85149;
+  --text:      #c9d1d9;
+  --dim:       #8b949e;
+  --sidebar-w: 270px;
+  --header-h:  58px;
+}
+/* ===== LIGHT THEME ===== */
+body.light {
+  --bg:      #f6f8fa;
+  --bg2:     #ffffff;
+  --bg3:     #f0f2f5;
+  --bg4:     #e4e8ec;
+  --border:  #d0d7de;
+  --accent:  #0969da;
+  --accent2: #1a7f37;
+  --warn:    #9a6700;
+  --danger:  #cf222e;
+  --text:    #1f2328;
+  --dim:     #57606a;
+}
+body.light pre.output                { color: #116329; }
+body.light .nav-link.active          { background: rgba(9,105,218,.08); }
+body.light .nav-link.mitre-link      { color: #cf222e; }
+body.light .nav-link.mitre-link.active { background: rgba(207,34,46,.08); }
+body.light .nav-link.rem-link        { color: #9a6700; }
+body.light .nav-link.rem-link.active { background: rgba(154,103,0,.08); }
+body.light .audit-section            { box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+body.light .tux-svg                  { filter: drop-shadow(0 1px 3px rgba(9,105,218,.25)); }
+body.light .t-crit a { background:rgba(207,34,46,.12);  color:#82071e; border-color:rgba(207,34,46,.35); }
+body.light .t-warn a { background:rgba(154,103,0,.12);  color:#7d4e00; border-color:rgba(154,103,0,.35); }
+body.light .t-poss a { background:rgba(9,105,218,.10);  color:#0550ae; border-color:rgba(9,105,218,.30); }
+body.light .t-none a { background:var(--bg3); color:var(--dim); border-color:var(--border); }
+body.light .flag-item { background:rgba(207,34,46,.08); color:#82071e; border-color:rgba(207,34,46,.2); }
+body.light a.flag-link:hover { background:rgba(207,34,46,.18); border-color:rgba(207,34,46,.4); color:#6e011a; }
+body.light .conseil.critique  { background:rgba(207,34,46,.06); border-color:rgba(207,34,46,.25); color:#82071e; }
+body.light .conseil.important { background:rgba(154,103,0,.06); border-color:rgba(154,103,0,.25); color:#7d4e00; }
+body.light .conseil.info      { background:rgba(9,105,218,.05); border-color:rgba(9,105,218,.2);  color:#0550ae; }
+body.light .conseil.critique  .conseil-icon { background:rgba(207,34,46,.15); color:#cf222e; border-color:rgba(207,34,46,.3); }
+body.light .conseil.important .conseil-icon { background:rgba(154,103,0,.15); color:#9a6700; border-color:rgba(154,103,0,.3); }
+body.light .conseil.info      .conseil-icon { background:rgba(9,105,218,.12); color:#0969da; border-color:rgba(9,105,218,.25); }
+body.light .rem-card.p1 { border-left-color:#cf222e; }
+body.light .rem-card.p2 { border-left-color:#9a6700; }
+body.light .rem-card.p3 { border-left-color:#0969da; }
+body.light .rem-cmd     { background:var(--bg3); }
+body.light .rem-cmd pre { color:#0550ae; }
+body.light .domain-card.crit { border-left-color:#cf222e; }
+body.light .domain-card.warn { border-left-color:#9a6700; }
+body.light .domain-card.ok   { border-left-color:#1a7f37; }
+/* Theme toggle button */
+#theme-toggle {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--dim);
+  transition: background .15s, border-color .15s, color .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+#theme-toggle .th-icon { font-size: .9rem; line-height: 1; }
+#theme-toggle .th-label { font-size: .68rem; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+
+/* HEADER */
+#header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;z-index:200}
+.header-logo{display:flex;align-items:center;gap:10px;white-space:nowrap;flex-shrink:0}
+.tux-svg{width:28px;height:34px;flex-shrink:0;filter:drop-shadow(0 1px 3px rgba(88,166,255,.3))}
+.logo-text{font-size:1.05rem;font-weight:700;color:var(--accent)}
+.logo-ver{color:var(--dim);font-weight:400;font-size:.82rem;margin-left:2px}
+.pill{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 11px;font-size:.72rem;color:var(--dim);white-space:nowrap}
+.pill strong{color:var(--text)}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+#search-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text);font-size:.78rem;width:180px;outline:none;transition:border-color .2s}
+#search-input:focus{border-color:var(--accent)}
+#search-input::placeholder{color:var(--dim)}
+.header-nav{display:flex;align-items:center;gap:4px;margin-left:8px}
+.hn-link{font-size:.75rem;font-weight:600;padding:4px 12px;border-radius:5px;text-decoration:none;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
+.hn-link:hover{background:var(--bg3);border-color:var(--border)}
+/* ── Coloured nav links ── */
+.hn-dash{color:#58a6ff}.hn-dash:hover{border-color:#58a6ff;background:rgba(88,166,255,.08)}
+.hn-rem{color:#3fb950}.hn-rem:hover{border-color:#3fb950;background:rgba(63,185,80,.08)}
+.hn-mitre{color:#f85149}.hn-mitre:hover{border-color:#f85149;background:rgba(248,81,73,.08)}
+.hn-logs{color:#a371f7}.hn-logs:hover{border-color:#a371f7;background:rgba(163,113,247,.08)}
+.hn-refs{color:var(--dim)}.hn-refs:hover{color:var(--text);border-color:var(--border)}
+
+/* ── Sidebar nav coloured + bold report links ── */
+.nav-dash {color:#58a6ff!important;font-weight:700}.nav-dash.active,.nav-dash:hover{background:rgba(88,166,255,.10)!important;border-left-color:#58a6ff!important}
+.nav-dom  {color:#d29922!important;font-weight:700}.nav-dom.active,.nav-dom:hover {background:rgba(210,153,34,.10)!important;border-left-color:#d29922!important}
+.nav-mitre{color:#f85149!important;font-weight:700}.nav-mitre.active,.nav-mitre:hover{background:rgba(248,81,73,.10)!important;border-left-color:#f85149!important}
+.nav-rem  {color:#3fb950!important;font-weight:700}.nav-rem.active,.nav-rem:hover {background:rgba(63,185,80,.10)!important;border-left-color:#3fb950!important}
+.nav-logs {color:#a371f7!important;font-weight:700}.nav-logs.active,.nav-logs:hover{background:rgba(163,113,247,.10)!important;border-left-color:#a371f7!important}
+
+/* ── Coloured nav-badges ── */
+.nb-dash {background:rgba(88,166,255,.15);color:#58a6ff;border:1px solid rgba(88,166,255,.3)}
+.nb-dom  {background:rgba(210,153,34,.15);color:#d29922;border:1px solid rgba(210,153,34,.3)}
+.nb-mitre{background:rgba(248,81,73,.15); color:#f85149;border:1px solid rgba(248,81,73,.3)}
+.nb-rem  {background:rgba(63,185,80,.15); color:#3fb950;border:1px solid rgba(63,185,80,.3)}
+.nb-logs {background:rgba(163,113,247,.15);color:#a371f7;border:1px solid rgba(163,113,247,.3)}
+.hn-link.hn-active{background:var(--bg3);border-color:currentColor}
+
+/* SIDEBAR */
+#sidebar{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:100;display:flex;flex-direction:column;transition:width .25s ease}
+#sidebar.collapsed{width:0;overflow:hidden;border-right:none}
+#sidebar-top{padding:10px 12px 6px;border-bottom:1px solid var(--border);font-size:.68rem;color:var(--dim);display:flex;justify-content:space-between;align-items:center}
+#sidebar-top strong{color:var(--accent);font-size:.8rem}
+#expand-all,#collapse-all{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:.68rem;padding:2px 7px;cursor:pointer;transition:all .15s}
+#expand-all:hover,#collapse-all:hover{border-color:var(--accent);color:var(--accent)}
+#sidebar nav{flex:1;overflow-y:auto;padding:6px 0 20px}
+#sidebar ul{list-style:none}
+.cat-group{margin:3px 0}
+.cat-toggle{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:6px 14px;color:var(--dim);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:left;transition:color .15s}
+.cat-toggle:hover{color:var(--text)}
+.cat-arrow{font-size:.55rem;transition:transform .2s;display:inline-block;color:var(--dim)}
+.cat-toggle.open .cat-arrow{transform:rotate(90deg)}
+.cat-count{margin-left:auto;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:0 6px;font-size:.65rem;color:var(--dim)}
+.cat-items{display:none;padding-left:4px}
+.cat-items.open{display:block}
+.cat-items li{position:relative}
+.nav-link{display:flex;align-items:center;gap:7px;padding:5px 14px 5px 18px;color:var(--dim);text-decoration:none;font-size:.78rem;border-left:2px solid transparent;transition:background .12s,color .12s,border-color .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-link:hover{background:var(--bg3);color:var(--text);border-left-color:var(--bg4)}
+.nav-link.active{background:rgba(88,166,255,.08);color:var(--accent);border-left-color:var(--accent)}
+/* nav-dot: shows open/closed state of log cards */
+.nav-dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-left:auto;flex-shrink:0;
+  background:transparent;border:1.5px solid transparent;
+  transition:background .2s,border-color .2s;
+}
+.nav-dot.dot-open{background:#3fb950;border-color:#3fb950}
+.nav-dot.dot-seen{background:transparent;border-color:var(--dim)}
+.nav-badge{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:0 5px;font-size:.62rem;font-family:monospace;color:var(--accent)}
+.nav-link.active .nav-badge{background:rgba(88,166,255,.15);border-color:var(--accent)}
+.nav-link.rem-link{color:#d29922}
+.nav-link.rem-link:hover{color:#d29922;border-left-color:#d29922}
+.nav-link.rem-link.active{color:#d29922;border-left-color:#d29922;background:rgba(210,153,34,.08)}
+.nav-link.hidden-search{display:none}
+
+/* CONTENT */
+#content{margin-left:var(--sidebar-w);margin-top:var(--header-h);padding:28px 36px 60px;max-width:1600px;transition:margin-left .25s ease}
+#content.sidebar-hidden{margin-left:0}
+/* Sidebar collapse toggle */
+#sidebar-collapse-btn{position:fixed;top:calc(var(--header-h) + 50%);left:calc(var(--sidebar-w) - 14px);z-index:101;width:24px;height:48px;background:var(--bg2);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;cursor:pointer;color:var(--dim);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:left .25s ease,color .15s;padding:0;line-height:1}
+#sidebar-collapse-btn:hover{color:var(--accent);background:var(--bg3)}
+#sidebar-collapse-btn.collapsed{left:0;border-left:1px solid var(--border)}
+/* Logo hover */
+#logo-home:hover .logo-text{color:var(--text)}
+#logo-home:hover .tux-svg{filter:drop-shadow(0 1px 5px rgba(88,166,255,.5))}
+.audit-section{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:22px;overflow:hidden;scroll-margin-top:calc(var(--header-h) + 12px)}
+.section-header{background:var(--bg3);border-bottom:1px solid var(--border);padding:11px 18px;display:flex;align-items:center;gap:10px}
+.section-header h2{font-size:.92rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;flex:1}
+.badge{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 8px;font-size:.68rem;font-family:monospace;color:var(--accent);flex-shrink:0}
+.cat-pill{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.2);border-radius:20px;padding:1px 9px;font-size:.66rem;color:var(--accent);flex-shrink:0}
+.conseil{margin:12px 18px 0;padding:9px 14px;border-radius:6px;font-size:.78rem;display:flex;gap:10px;align-items:flex-start;line-height:1.6}
+.conseil-icon{flex-shrink:0;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:2px;white-space:nowrap}
+.conseil-text{flex:1}
+.conseil.critique{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.3);color:#f8a09b}
+.conseil.critique .conseil-icon{background:rgba(248,81,73,.2);color:#f85149;border:1px solid rgba(248,81,73,.4)}
+.conseil.important{background:rgba(210,153,34,.07);border:1px solid rgba(210,153,34,.3);color:var(--warn)}
+.conseil.important .conseil-icon{background:rgba(210,153,34,.2);color:var(--warn);border:1px solid rgba(210,153,34,.4)}
+.conseil.info{background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);color:#79b8ff}
+.conseil.info .conseil-icon{background:rgba(88,166,255,.15);color:var(--accent);border:1px solid rgba(88,166,255,.3)}
+pre.output{padding:16px 18px;overflow-x:auto;font-family:'Cascadia Code','Consolas','Courier New',monospace;font-size:.76rem;line-height:1.65;color:#7ee787;white-space:pre-wrap;word-break:break-all}
+
+/* DASHBOARD */
+.dashboard-section .section-header{background:linear-gradient(135deg,#161b22 60%,#1f2937)}
+.dashboard-section .section-header h2{color:#58a6ff}
+body.light .dashboard-section .section-header{background:linear-gradient(135deg,#f0f6ff 60%,#dbeafe)}
+body.light .dashboard-section .section-header h2{color:#1d4ed8}
+.dashboard-body{padding:20px 24px 28px}
+
+/* Top row: gauge | radar | list — centred, full-width */
+.dash-top-row{
+  display:flex;
+  gap:40px;                    /* more breathing room between blocks */
+  align-items:flex-start;
+  justify-content:center;
+  flex-wrap:wrap;
+  width:100%;
+  margin-bottom:24px;
+}
+
+/* LEFT: gauge + meta — tight vertical, no extra space below */
+.dash-left{
+  display:flex;flex-direction:column;align-items:center;
+  gap:6px;
+  flex:0 0 200px;
+  padding-top:32px;
+  margin-left:-10px;
+  padding-right:40px;          /* right-side spacing before divider */
+  border-right:1px solid var(--border);  /* subtle divider */
+}
+.global-gauge{flex-shrink:0;line-height:0}
+.global-meta{display:flex;flex-direction:column;gap:4px;text-align:center}
+.gm-title{font-size:.85rem;font-weight:600;color:var(--text)}
+.gm-machine{font-size:1rem;font-weight:700;color:var(--accent)}
+.gm-date,.gm-modules,.gm-os{font-size:.72rem;color:var(--dim)}
+.gm-legend{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;justify-content:center}
+.leg{font-size:.65rem;padding:2px 8px;border-radius:12px;font-weight:600}
+.leg.crit{background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.3)}
+.leg.warn{background:rgba(210,153,34,.15);color:#d29922;border:1px solid rgba(210,153,34,.3)}
+.leg.ok  {background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
+
+/* CENTER: radar */
+.dash-radar{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  flex:0 0 auto;
+  padding-left:0;
+  padding-right:40px;          /* right-side spacing before divider */
+  border-right:1px solid var(--border);  /* subtle divider */
+}
+.radar-title{font-size:.75rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+#radar-canvas{cursor:crosshair;display:block}
+.radar-tooltip{
+  position:fixed;z-index:9999;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;font-size:.72rem;color:var(--text);
+  pointer-events:none;max-width:220px;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);line-height:1.5;
+}
+.radar-tooltip .rt-name{font-weight:700;color:var(--accent);display:block;margin-bottom:3px}
+.radar-tooltip .rt-score{font-size:.8rem;font-weight:700;display:block;margin-bottom:3px}
+.radar-tooltip .rt-issues{color:var(--dim);font-size:.68rem}
+
+/* RIGHT: domain list — 5 items visible, clean cutoff */
+.dash-right{
+  flex:1 1 320px;
+  min-width:280px;
+  max-width:700px;
+  padding-top:8px;
+}
+.dl-title{font-size:.75rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+
+/* 2-column grid, exactly 5 rows visible (item≈66px + gap≈6px) */
+.dl-list{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  max-height:354px;         /* 5 items × 66px + 4 gaps × 6px = 354px */
+  overflow-y:auto;
+  padding-right:2px;
+  /* Fade out at bottom to hint scroll */
+  -webkit-mask-image:linear-gradient(to bottom, black 88%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 88%, transparent 100%);
+}
+.dl-list::-webkit-scrollbar{width:3px}
+.dl-list::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+
+.dl-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 10px;cursor:pointer;transition:border-color .15s,transform .1s}
+.dl-item:hover{transform:translateX(2px)}
+.dl-item.crit{border-left:3px solid #f85149}.dl-item.crit:hover{border-color:#f85149}
+.dl-item.warn{border-left:3px solid #d29922}.dl-item.warn:hover{border-color:#d29922}
+.dl-item.ok  {border-left:3px solid #3fb950}.dl-item.ok:hover{border-color:#3fb950}
+.dl-header{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dl-name{font-size:.76rem;font-weight:600;color:var(--text);flex:1}
+.dl-score{font-size:.72rem;font-weight:700}
+.dl-tip{font-size:.67rem;color:var(--dim);line-height:1.4}
+
+/* Domain Analysis standalone section */
+.domain-analysis-section .section-header{background:linear-gradient(135deg,#161b22 60%,#1c2230)}
+.domain-analysis-section .section-header h2{color:#d29922}
+body.light .domain-analysis-section .section-header{background:linear-gradient(135deg,#fffbeb 60%,#fef3c7)}
+body.light .domain-analysis-section .section-header h2{color:#92400e}
+.domain-analysis-body{padding:18px 20px 22px}
+.domains-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.domain-card{display:block;text-decoration:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;transition:border-color .15s,transform .1s;cursor:pointer}
+.domain-card:hover{transform:translateY(-2px)}
+.domain-card.crit{border-left:3px solid #f85149}.domain-card.crit:hover{border-color:#f85149}
+.domain-card.warn{border-left:3px solid #d29922}.domain-card.warn:hover{border-color:#d29922}
+.domain-card.ok  {border-left:3px solid #3fb950}.domain-card.ok:hover{border-color:#3fb950}
+.dc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dc-name{font-size:.8rem;font-weight:600;color:var(--text)}
+.dc-badge{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:10px}
+.domain-card.crit .dc-badge{background:rgba(248,81,73,.15);color:#f85149}
+.domain-card.warn .dc-badge{background:rgba(210,153,34,.15);color:#d29922}
+.domain-card.ok   .dc-badge{background:rgba(63,185,80,.15);color:#3fb950}
+.dc-bar-wrap{height:4px;background:var(--bg4);border-radius:3px;margin-bottom:8px;overflow:hidden}
+.dc-bar{height:100%;border-radius:3px;transition:width .8s ease}
+.dc-score-line{display:flex;flex-direction:column;gap:4px}
+.dc-score{font-size:.8rem;font-weight:700}
+.domain-issues{margin:0;padding:0 0 0 12px;font-size:.7rem;color:var(--dim);line-height:1.5}
+.domain-issues li{margin-bottom:2px}
+.domain-ok{font-size:.7rem;color:#3fb950;margin:0}
+
+/* light-theme overrides for domain cards */
+body.light .domain-card.crit{border-left-color:#cf222e}
+body.light .domain-card.warn{border-left-color:#9a6700}
+body.light .domain-card.ok  {border-left-color:#1a7f37}
+
+/* ---- Responsive breakpoints ---- */
+@media(max-width:1200px){
+  .dash-right{max-width:500px}
+}
+@media(max-width:960px){
+  .dl-list{grid-template-columns:1fr;max-height:354px}
+  .dash-right{flex:1 1 260px;max-width:100%}
+  .domains-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+}
+/* ── HAMBURGER BUTTON ── */
+#hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;
+  width:36px;height:36px;padding:6px;cursor:pointer;border:1px solid var(--border);
+  border-radius:6px;background:none;flex-shrink:0}
+#hamburger span{display:block;height:2px;background:var(--text);border-radius:2px;transition:all .2s}
+#hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+#hamburger.open span:nth-child(2){opacity:0}
+#hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ── MOBILE OVERLAY ── */
+#mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+#mobile-overlay.visible{display:block}
+
+@media(max-width:768px){
+  /* Header shrinks: hide nav links, show hamburger */
+  .header-nav{display:none}
+  .pill{display:none}
+  #hamburger{display:flex}
+  /* Sidebar becomes a drawer */
+  #sidebar{
+    transform:translateX(-100%);
+    transition:transform .25s ease;
+    width:var(--sidebar-w) !important;
+    z-index:100;
+  }
+  #sidebar.mobile-open{transform:translateX(0)}
+  #sidebar.collapsed{transform:translateX(-100%)}
+  #sidebar-collapse-btn{display:none}
+  #content{margin-left:0 !important;padding:16px}
+  /* Dashboard */
+  .dash-top-row{flex-direction:column;align-items:center}
+  .dash-left{flex:0 0 auto;width:100%;max-width:320px;padding-top:0;margin-left:0;padding-right:0;border-right:none;border-bottom:1px solid var(--border);padding-bottom:20px}
+  .dash-radar{width:100%;max-width:320px;padding-right:0;border-right:none}
+  #radar-canvas{width:100%;height:auto}
+  .dash-right{flex:1 1 auto;width:100%;max-width:100%;min-width:0;padding-top:0}
+  .dl-list{grid-template-columns:1fr;max-height:none;-webkit-mask-image:none;mask-image:none}
+  .domains-grid{grid-template-columns:1fr 1fr}
+}
+
+/* REMEDIATION */
+.rem-section .section-header{background:linear-gradient(135deg,#161b22 60%,#1f1a0e)}
+.rem-section .section-header h2{color:#3fb950}
+body.light .rem-section .section-header{background:linear-gradient(135deg,#f0fdf4 60%,#dcfce7)}
+body.light .rem-section .section-header h2{color:#166534}
+.rem-body-wrap{padding:20px 20px 28px}
+.rem-summary{display:flex;gap:12px;margin-bottom:22px;align-items:flex-start;flex-wrap:wrap}
+.rem-sum-card{flex-shrink:0;min-width:100px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:center}
+.rem-sum-num{font-size:1.6rem;font-weight:700;line-height:1;display:block}
+.rem-sum-lbl{font-size:.7rem;color:var(--dim);margin-top:4px;display:block}
+.rem-sum-card.p1 .rem-sum-num{color:#f85149}
+.rem-sum-card.p2 .rem-sum-num{color:#d29922}
+.rem-sum-card.p3 .rem-sum-num{color:#58a6ff}
+.rem-disclaimer{flex:1;min-width:200px;font-size:.72rem;color:var(--dim);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;line-height:1.6}
+.rem-disclaimer p{margin:0 0 6px}
+.rem-disclaimer p:last-child{margin:0}
+.rem-disclaimer-note{color:var(--dim);font-style:italic}
+
+/* Log card footer */
+.log-footer{margin:10px 16px 14px;border-radius:6px;overflow:hidden}
+.log-footer-rem{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:var(--bg4);border:1px solid var(--border);border-radius:6px;
+  cursor:pointer;transition:background .15s,border-color .15s;
+  text-decoration:none;color:var(--text);
+}
+.log-footer-rem:hover{background:var(--bg3);border-color:var(--accent)}
+.log-footer-rem .lf-icon{font-size:1rem;flex-shrink:0}
+.log-footer-rem .lf-text{flex:1;font-size:.72rem;line-height:1.4}
+.log-footer-rem .lf-text strong{display:block;font-size:.76rem;margin-bottom:2px}
+.log-footer-rem .lf-arrow{color:var(--dim);font-size:.8rem;flex-shrink:0}
+.log-footer-ok{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.25);border-radius:6px;
+  font-size:.72rem;color:#3fb950;line-height:1.4;
+}
+.log-footer-ok .lf-icon{font-size:1rem;flex-shrink:0}
+.log-footer-ok .lf-text strong{display:block;font-size:.76rem;margin-bottom:2px}
+body.light .log-footer-ok{background:rgba(26,127,55,.08);color:#1a7f37;border-color:rgba(26,127,55,.25)}
+.rem-group-title{font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 0 10px;margin-top:8px}
+.p1-title{color:#f85149}.p2-title{color:#d29922}.p3-title{color:#58a6ff}
+.rem-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden}
+.rem-card.p1{border-left:3px solid #f85149}
+.rem-card.p2{border-left:3px solid #d29922}
+.rem-card.p3{border-left:3px solid #58a6ff}
+.rem-card-header{padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg4)}
+.rem-prio-badge{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:4px}
+.p1 .rem-prio-badge{background:rgba(248,81,73,.2);color:#f85149;border:1px solid rgba(248,81,73,.35)}
+.p2 .rem-prio-badge{background:rgba(210,153,34,.2);color:#d29922;border:1px solid rgba(210,153,34,.35)}
+.p3 .rem-prio-badge{background:rgba(88,166,255,.2);color:#58a6ff;border:1px solid rgba(88,166,255,.35)}
+.rem-cat{font-size:.68rem;font-weight:600;color:var(--dim);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px}
+.rem-title{font-size:.82rem;font-weight:600;color:var(--text);flex:1}
+.rem-section-link{font-size:.72rem;color:var(--accent);text-decoration:none;margin-left:auto;white-space:nowrap}
+.rem-section-link:hover{text-decoration:underline}
+.rem-body{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.rem-detail{font-size:.8rem;color:var(--text);line-height:1.6}
+.rem-cmd{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px}
+.rem-cmd-label{font-size:.65rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px}
+.rem-cmd pre{font-family:'Cascadia Code','Consolas',monospace;font-size:.74rem;color:#79b8ff;white-space:pre-wrap}
+.rem-ref{font-size:.7rem;color:var(--dim)}
+
+/* ===== LOGS SECTION ===== */
+.logs-section .section-header{background:linear-gradient(135deg,#161b22 60%,#1e1a2e)}
+.logs-section .section-header h2{color:#a371f7}
+body.light .logs-section .section-header{background:linear-gradient(135deg,#faf5ff 60%,#ede9fe)}
+body.light .logs-section .section-header h2{color:#6d28d9}
+.logs-body{padding:16px 20px 24px}
+.logs-intro{font-size:.75rem;color:var(--dim);margin-bottom:14px}
+.logs-grid{display:flex;flex-direction:column;gap:12px}
+
+/* Log category groups */
+.log-cat-group{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.log-cat-header{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  cursor:pointer;background:var(--bg3);transition:background .15s;
+  border-bottom:1px solid transparent;
+  user-select:none;
+}
+.log-cat-header:hover{background:var(--bg4)}
+.log-cat-group.open .log-cat-header{border-bottom-color:var(--border)}
+.log-cat-arrow{font-size:.55rem;color:var(--dim);transition:transform .2s;display:inline-block;flex-shrink:0}
+.log-cat-group.open .log-cat-arrow{transform:rotate(90deg)}
+.log-cat-label{font-size:.75rem;font-weight:700;color:var(--text);letter-spacing:.05em;text-transform:uppercase;flex:1}
+.log-cat-count{font-size:.65rem;background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:0 7px;color:var(--dim)}
+.log-cat-body{display:none;padding:8px;display:none;flex-direction:column;gap:6px}
+.log-cat-group.open .log-cat-body{display:flex}
+.log-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.log-card.open .log-card-body{display:block}
+.log-card.open .log-arrow{transform:rotate(90deg)}
+.log-card-header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;cursor:pointer;
+  transition:background .15s;
+  border-left:3px solid #a371f7;
+}
+.log-card-header:hover{background:var(--bg4)}
+.log-badge{
+  font-size:.62rem;font-weight:700;
+  background:rgba(163,113,247,.15);color:#a371f7;
+  border:1px solid rgba(163,113,247,.3);
+  border-radius:4px;padding:1px 6px;white-space:nowrap;flex-shrink:0
+}
+.log-name{font-size:.78rem;font-weight:600;color:var(--text);flex:1}
+.log-goto{
+  font-size:.68rem;color:#a371f7;text-decoration:none;
+  white-space:nowrap;flex-shrink:0;
+  opacity:0;transition:opacity .15s
+}
+.log-card-header:hover .log-goto{opacity:1}
+.log-arrow{font-size:.5rem;color:var(--dim);transition:transform .2s;flex-shrink:0}
+.log-card-body{display:none;border-top:1px solid var(--border)}
+.log-card.log-active{border-color:#a371f7;box-shadow:0 0 0 2px rgba(163,113,247,.3)}
+.log-card.log-active .log-card-header{border-left-color:#a371f7}
+.log-card-body pre.output{
+  margin:0;padding:12px 16px;
+  font-size:.72rem;line-height:1.6;
+  white-space:pre-wrap;word-break:break-all;
+  color:#3fb950;background:transparent;
+  max-height:400px;overflow-y:auto
+}
+.log-conseil{margin:12px 16px 0;border-radius:6px}
+.log-cat{font-size:.65rem;color:var(--dim);margin-left:auto;margin-right:8px;flex-shrink:0}
+/* light theme overrides */
+body.light .log-badge{background:rgba(109,40,217,.12);color:#6d28d9;border-color:rgba(109,40,217,.25)}
+body.light .log-card-header{border-left-color:#7c3aed}
+body.light .log-goto{color:#7c3aed}
+body.light .log-card-body pre.output{color:#166534}
+
+/* SIDEBAR REFERENCES PANEL */
+#sidebar-refs{border-top:1px solid var(--border);margin-top:auto;flex-shrink:0}
+.refs-toggle-btn{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;padding:9px 12px;color:var(--dim);font-size:.68rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;text-align:left;transition:color .15s,background .15s}
+.refs-toggle-btn:hover{color:var(--text);background:var(--bg3)}
+.refs-toggle-btn.open{color:var(--text)}
+.refs-toggle-icon{font-size:.5rem;transition:transform .2s;display:inline-block;flex-shrink:0}
+.refs-toggle-btn.open .refs-toggle-icon{transform:rotate(90deg)}
+.refs-title-text{flex:1}
+.refs-count{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:0 5px;font-size:.6rem;color:var(--dim)}
+#refs-list{padding:2px 0 10px;display:none}
+.ref-link{display:flex;align-items:flex-start;gap:8px;padding:5px 8px;border-radius:5px;text-decoration:none;color:var(--dim);font-size:.74rem;line-height:1.35;transition:background .12s,color .12s;margin-bottom:1px}
+.ref-link:hover{background:var(--bg3);color:var(--text)}
+.ref-link .ref-icon{flex-shrink:0;width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;margin-top:1px}
+.ref-link .ref-body{flex:1;overflow:hidden}
+.ref-link .ref-name{font-weight:600;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ref-link .ref-org{font-size:.67rem;color:var(--dim)}
+.ref-link.anssi .ref-icon{background:rgba(0,114,188,.2);color:#0072bc}
+.ref-link.cis   .ref-icon{background:rgba(255,138,0,.2);color:#ff8a00}
+.ref-link.nist  .ref-icon{background:rgba(63,185,80,.2);color:#3fb950}
+.ref-link.mitre .ref-icon{background:rgba(248,81,73,.2);color:#f85149}
+.ref-link.ssi   .ref-icon{background:rgba(139,148,158,.2);color:#8b949e}
+.ref-link.debian .ref-icon{background:rgba(215,7,81,.2);color:#d70751}
+.ref-link.ubuntu .ref-icon{background:rgba(233,84,32,.2);color:#e95420}
+.ref-link.cisa  .ref-icon{background:rgba(0,120,212,.2);color:#0078d4}
+.hn-refs{color:var(--dim)}.hn-refs:hover{color:var(--text);border-color:var(--border)}
+.mitre-section .section-header{background:linear-gradient(135deg,#161b22 60%,#1a1f2e)}
+.mitre-section .section-header h2{color:#f85149}
+body.light .mitre-section .section-header{background:linear-gradient(135deg,#fff5f5 60%,#fee2e2)}
+body.light .mitre-section .section-header h2{color:#991b1b}
+.mitre-body{padding:20px 20px 28px}
+.mitre-stats{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.mitre-note{font-size:.72rem;color:var(--dim);line-height:1.5;margin-bottom:18px;padding:8px 12px;background:var(--bg3);border-left:3px solid #f85149;border-radius:0 6px 6px 0}
+.ms-card{flex:1;min-width:90px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center}
+.ms-num{font-size:1.6rem;font-weight:700;line-height:1}
+.ms-lbl{font-size:.7rem;color:var(--dim);margin-top:4px}
+.ms-card.crit .ms-num{color:#f85149}
+.ms-card.warn .ms-num{color:#d29922}
+.ms-card.poss .ms-num{color:#58a6ff}
+.ms-card.none .ms-num{color:var(--dim)}
+.mitre-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.leg-item{font-size:.72rem;padding:3px 10px;border-radius:4px;font-weight:600}
+.leg-item.t-crit{background:rgba(248,81,73,.25);color:#f88;border:1px solid rgba(248,81,73,.5)}
+.leg-item.t-warn{background:rgba(210,153,34,.25);color:#fa3;border:1px solid rgba(210,153,34,.5)}
+.leg-item.t-poss{background:rgba(88,166,255,.2);color:#8bf;border:1px solid rgba(88,166,255,.4)}
+.leg-item.t-none{background:var(--bg3);color:var(--dim);border:1px solid var(--border)}
+.mitre-flags{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:18px}
+.flags-title{font-size:.72rem;color:var(--dim);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.flags-list{display:flex;flex-wrap:wrap;gap:6px}
+.flag-item{font-size:.7rem;background:rgba(248,81,73,.12);color:#f8a09b;border:1px solid rgba(248,81,73,.25);border-radius:4px;padding:2px 8px}
+a.flag-link{text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s}
+a.flag-link:hover{background:rgba(248,81,73,.28);border-color:rgba(248,81,73,.6);color:#fcc}
+.flag-arrow{opacity:.7;font-size:.65rem}
+.flag-none{font-size:.75rem;color:#3fb950}
+.mitre-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.mitre-table{border-collapse:collapse;width:100%;min-width:1200px}
+.tac-header{background:var(--bg4);color:var(--text);font-size:.68rem;font-weight:700;padding:8px 6px;text-align:center;border:1px solid var(--border);white-space:nowrap;letter-spacing:.03em;position:sticky;top:0;z-index:2}
+.tac-badge{display:inline-block;background:#f85149;color:#fff;font-size:.58rem;border-radius:10px;padding:0 5px;margin-left:4px;font-weight:700}
+.tech-cell{padding:4px 5px;border:1px solid rgba(48,54,61,.6);vertical-align:top;font-size:.64rem;line-height:1.3;width:calc(100%/13);min-width:82px}
+.tech-cell a{text-decoration:none;display:block;border-radius:3px;padding:3px 4px;transition:filter .1s}
+.tech-cell a:hover{filter:brightness(1.3)}
+.tech-cell small{opacity:.7;font-size:.58rem}
+.t-crit a{background:rgba(248,81,73,.3);color:#faa;border:1px solid rgba(248,81,73,.5)}
+.t-warn a{background:rgba(210,153,34,.25);color:#fc9;border:1px solid rgba(210,153,34,.4)}
+.t-poss a{background:rgba(88,166,255,.18);color:#9cf;border:1px solid rgba(88,166,255,.3)}
+.t-none a{background:var(--bg3);color:var(--dim);border:1px solid var(--border)}
+.t-empty{background:transparent;border-color:rgba(48,54,61,.3)}
+.mitre-footer{font-size:.68rem;color:var(--dim);margin-top:14px;padding-top:10px;border-top:1px solid var(--border)}
+.nav-link.mitre-link{color:#f85149;font-weight:600}
+.nav-link.mitre-link:hover,.nav-link.mitre-link.active{color:#f85149;border-left-color:#f85149;background:rgba(248,81,73,.08)}
+
+/* BACK TO TOP */
+#back-to-top{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border);border-radius:50%;width:38px;height:38px;color:var(--dim);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s,border-color .2s,color .2s;z-index:300}
+#back-to-top.visible{opacity:1}
+#back-to-top:hover{border-color:var(--accent);color:var(--accent)}
+
+</style>
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div id="header">
+  <div class="header-logo" id="logo-home" title="Back to top" style="cursor:pointer">
+    <svg class="tux-svg" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg" aria-label="Tux">
+      <ellipse cx="20" cy="34" rx="13" ry="14" fill="#1a1a1a"/>
+      <ellipse cx="20" cy="36" rx="8"  ry="10" fill="#f5f0e8"/>
+      <ellipse cx="20" cy="12" rx="10" ry="11" fill="#1a1a1a"/>
+      <ellipse cx="16.5" cy="10" rx="2.2" ry="2.8" fill="white"/>
+      <ellipse cx="23.5" cy="10" rx="2.2" ry="2.8" fill="white"/>
+      <circle  cx="17"   cy="10.5" r="1.2" fill="#111"/>
+      <circle  cx="24"   cy="10.5" r="1.2" fill="#111"/>
+      <ellipse cx="20"  cy="16.5" rx="3.2" ry="2"  fill="#f5a623"/>
+      <ellipse cx="14"  cy="47"   rx="5.2" ry="2"  fill="#f5a623" transform="rotate(-10,14,47)"/>
+      <ellipse cx="26"  cy="47"   rx="5.2" ry="2"  fill="#f5a623" transform="rotate(10,26,47)"/>
+      <ellipse cx="8"   cy="34"   rx="4"   ry="10" fill="#111" transform="rotate(-10,8,34)"/>
+      <ellipse cx="32"  cy="34"   rx="4"   ry="10" fill="#111" transform="rotate(10,32,34)"/>
+    </svg>
+    <span class="logo-text">TuxAudit <span class="logo-ver">v1.0</span></span>
+  </div>
+  <div class="pill"><strong>raspberrypi</strong></div>
+  <div class="pill">Debian GNU/Linux 13 (trixie)</div>
+  <div class="pill">2026-03-18 14:32:07</div>
+  <div class="header-nav">
+    <a class="hn-link hn-dash"  href="#dashboard"   onclick="event.preventDefault();navToAnchor('dashboard')">DASHBOARD</a>
+    <a class="hn-link hn-mitre" href="#mitre-matrix" onclick="event.preventDefault();navToAnchor('mitre-matrix')">ATT&amp;CK</a>
+    <a class="hn-link hn-rem"   href="#remediation"  onclick="event.preventDefault();navToAnchor('remediation')">REMEDIATION</a>
+    <a class="hn-link hn-logs"  href="#logs-section" onclick="event.preventDefault();navToAnchor('logs-section')">LOGS</a>
+    <a class="hn-link hn-refs"  href="#sidebar-refs" id="refs-header-btn">References</a>
+  </div>
+  <div class="header-right">
+    <button id="hamburger" title="Menu" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <button id="theme-toggle" title="Switch theme">
+      <span class="th-icon">&#9790;</span>
+      <span class="th-label">Light</span>
+    </button>
+    <input type="text" id="search-input" placeholder="Search module...">
+  </div>
+</div>
+<div id="mobile-overlay"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-top">
+    <strong>TuxAudit v1.0</strong>
+    <div style="display:flex;gap:4px">
+      <button id="expand-all">+</button>
+      <button id="collapse-all">-</button>
+    </div>
+  </div>
+  <button id="sidebar-collapse-btn" title="Collapse sidebar">&#8249;</button>
+  <nav>
+    <ul>
+      <li><a class="nav-link nav-dash"  href="#dashboard"       data-anchor="dashboard">
+        <span class="nav-badge nb-dash">DASH</span> SECURITY DASHBOARD</a></li>
+      <li><a class="nav-link nav-dom"   href="#domain-analysis" data-anchor="domain-analysis">
+        <span class="nav-badge nb-dom">DOM</span> DOMAIN ANALYSIS</a></li>
+      <li><a class="nav-link nav-mitre" href="#mitre-matrix"    data-anchor="mitre-matrix">
+        <span class="nav-badge nb-mitre">ATT&amp;CK</span> MITRE ATT&amp;CK</a></li>
+      <li><a class="nav-link nav-rem"   href="#remediation"     data-anchor="remediation">
+        <span class="nav-badge nb-rem">REM</span> REMEDIATION PLAN</a></li>
+      <li><a class="nav-link nav-logs"  href="#logs-section"    data-anchor="logs-section">
+        <span class="nav-badge nb-logs">LOGS</span> AUDIT LOGS</a></li>
+<li class='cat-group'><button class='cat-toggle' data-target='cat-system'><span class='cat-arrow'>&#9654;</span> System <span class='cat-count'>2</span></button><ul class='cat-items' id='cat-system'><li><a class='nav-link' href='#os-info' data-anchor='os-info'><span class='nav-badge'>OS-INFO</span> OS Information<span class='nav-dot' data-dot='os-info'></span></a></li><li><a class='nav-link' href='#kernel' data-anchor='kernel'><span class='nav-badge'>KERNEL</span> Kernel & Boot Security<span class='nav-dot' data-dot='kernel'></span></a></li></ul></li><li class='cat-group'><button class='cat-toggle' data-target='cat-processes'><span class='cat-arrow'>&#9654;</span> Processes <span class='cat-count'>1</span></button><ul class='cat-items' id='cat-processes'><li><a class='nav-link' href='#processes' data-anchor='processes'><span class='nav-badge'>PROC</span> Process List<span class='nav-dot' data-dot='processes'></span></a></li></ul></li><li class='cat-group'><button class='cat-toggle' data-target='cat-network'><span class='cat-arrow'>&#9654;</span> Network <span class='cat-count'>5</span></button><ul class='cat-items' id='cat-network'><li><a class='nav-link' href='#netif' data-anchor='netif'><span class='nav-badge'>NET-IF</span> Network Interfaces<span class='nav-dot' data-dot='netif'></span></a></li><li><a class='nav-link' href='#ports' data-anchor='ports'><span class='nav-badge'>PORTS</span> Open Ports & Connections<span class='nav-dot' data-dot='ports'></span></a></li><li><a class='nav-link' href='#wifi' data-anchor='wifi'><span class='nav-badge'>WIFI</span> Wi-Fi Configuration<span class='nav-dot' data-dot='wifi'></span></a></li><li><a class='nav-link' href='#ntp' data-anchor='ntp'><span class='nav-badge'>NTP</span> Time Source (NTP)<span class='nav-dot' data-dot='ntp'></span></a></li><li><a class='nav-link' href='#netrecon' data-anchor='netrecon'><span class='nav-badge'>NET-RECON</span> Network Recon<span class='nav-dot' data-dot='netrecon'></span></a></li></ul></li><li class='cat-group'><button class='cat-toggle' data-target='cat-security'><span class='cat-arrow'>&#9654;</span> Security <span class='cat-count'>6</span></button><ul class='cat-items' id='cat-security'><li><a class='nav-link' href='#users' data-anchor='users'><span class='nav-badge'>USERS</span> Users & Groups<span class='nav-dot' data-dot='users'></span></a></li><li><a class='nav-link' href='#firewall' data-anchor='firewall'><span class='nav-badge'>FIREWALL</span> Firewall Status<span class='nav-dot' data-dot='firewall'></span></a></li><li><a class='nav-link' href='#ssh' data-anchor='ssh'><span class='nav-badge'>SSH</span> SSH Configuration<span class='nav-dot' data-dot='ssh'></span></a></li><li><a class='nav-link' href='#cron' data-anchor='cron'><span class='nav-badge'>CRON</span> Scheduled Tasks (Cron)<span class='nav-dot' data-dot='cron'></span></a></li><li><a class='nav-link' href='#suid' data-anchor='suid'><span class='nav-badge'>SUID</span> SUID / SGID Files<span class='nav-dot' data-dot='suid'></span></a></li><li><a class='nav-link' href='#logs' data-anchor='logs'><span class='nav-badge'>LOGS</span> System Logs<span class='nav-dot' data-dot='logs'></span></a></li></ul></li><li class='cat-group'><button class='cat-toggle' data-target='cat-packages'><span class='cat-arrow'>&#9654;</span> Packages <span class='cat-count'>2</span></button><ul class='cat-items' id='cat-packages'><li><a class='nav-link' href='#packages' data-anchor='packages'><span class='nav-badge'>PKGS</span> Installed Packages<span class='nav-dot' data-dot='packages'></span></a></li><li><a class='nav-link' href='#services' data-anchor='services'><span class='nav-badge'>SERVICES</span> Services<span class='nav-dot' data-dot='services'></span></a></li></ul></li><li class='cat-group'><button class='cat-toggle' data-target='cat-forensics'><span class='cat-arrow'>&#9654;</span> Forensics <span class='cat-count'>3</span></button><ul class='cat-items' id='cat-forensics'><li><a class='nav-link' href='#history' data-anchor='history'><span class='nav-badge'>HISTORY</span> Bash History & IOCs<span class='nav-dot' data-dot='history'></span></a></li><li><a class='nav-link' href='#rootkit' data-anchor='rootkit'><span class='nav-badge'>ROOTKIT</span> Kernel Modules & Rootkits<span class='nav-dot' data-dot='rootkit'></span></a></li><li><a class='nav-link' href='#integrity' data-anchor='integrity'><span class='nav-badge'>INTEGRITY</span> File Integrity<span class='nav-dot' data-dot='integrity'></span></a></li></ul></li><li class='cat-group'><button class='cat-toggle' data-target='cat-services'><span class='cat-arrow'>&#9654;</span> Services <span class='cat-count'>4</span></button><ul class='cat-items' id='cat-services'><li><a class='nav-link' href='#web' data-anchor='web'><span class='nav-badge'>WEB</span> Web Stack Audit<span class='nav-dot' data-dot='web'></span></a></li><li><a class='nav-link' href='#database' data-anchor='database'><span class='nav-badge'>DATABASE</span> Database Audit<span class='nav-dot' data-dot='database'></span></a></li><li><a class='nav-link' href='#containers' data-anchor='containers'><span class='nav-badge'>CONTAINERS</span> Container Audit<span class='nav-dot' data-dot='containers'></span></a></li><li><a class='nav-link' href='#filesvcs' data-anchor='filesvcs'><span class='nav-badge'>FILESVCS</span> File & Mail Services<span class='nav-dot' data-dot='filesvcs'></span></a></li></ul></li>
+    </ul>
+  </nav>
+
+  <!-- SECURITY REFERENCES PANEL -->
+  <div id="sidebar-refs">
+    <button id="refs-toggle" class="refs-toggle-btn">
+      <span class="refs-toggle-icon">&#9654;</span>
+      <span class="refs-title-text">Security References</span>
+      <span class="refs-count">16</span>
+    </button>
+    <div id="refs-list" style="display:none">
+
+    <a class="ref-link cis" href="https://www.cisecurity.org/benchmark/debian_linux" target="_blank" rel="noopener">
+      <span class="ref-icon">CI</span>
+      <span class="ref-body"><span class="ref-name">CIS Debian Linux Benchmark</span>
+      <span class="ref-org">CIS — Debian 11/12 hardening guide</span></span>
+    </a>
+    <a class="ref-link cis" href="https://www.cisecurity.org/benchmark/ubuntu_linux" target="_blank" rel="noopener">
+      <span class="ref-icon">CI</span>
+      <span class="ref-body"><span class="ref-name">CIS Ubuntu Linux Benchmark</span>
+      <span class="ref-org">CIS — Ubuntu 22.04/24.04 hardening</span></span>
+    </a>
+    <a class="ref-link cis" href="https://www.cisecurity.org/controls" target="_blank" rel="noopener">
+      <span class="ref-icon">CI</span>
+      <span class="ref-body"><span class="ref-name">CIS Controls v8</span>
+      <span class="ref-org">CIS — 18 essential security controls</span></span>
+    </a>
+    <a class="ref-link ssi" href="https://www.openssh.com/security.html" target="_blank" rel="noopener">
+      <span class="ref-icon">SS</span>
+      <span class="ref-body"><span class="ref-name">SSH Security Best Practices</span>
+      <span class="ref-org">SSH.com — Hardening SSH configuration</span></span>
+    </a>
+    <a class="ref-link ssi" href="https://linux-audit.com/linux-security-guide-for-hardening-ssh/" target="_blank" rel="noopener">
+      <span class="ref-icon">LA</span>
+      <span class="ref-body"><span class="ref-name">Linux Audit — SSH Hardening Guide</span>
+      <span class="ref-org">Linux Audit — Practical SSH lockdown</span></span>
+    </a>
+    <a class="ref-link nist" href="https://www.nist.gov/cyberframework" target="_blank" rel="noopener">
+      <span class="ref-icon">NI</span>
+      <span class="ref-body"><span class="ref-name">NIST Cybersecurity Framework 2.0</span>
+      <span class="ref-org">NIST — Identify / Protect / Detect / Respond</span></span>
+    </a>
+    <a class="ref-link nist" href="https://csrc.nist.gov/publications/detail/sp/800-123/final" target="_blank" rel="noopener">
+      <span class="ref-icon">NI</span>
+      <span class="ref-body"><span class="ref-name">NIST SP 800-123</span>
+      <span class="ref-org">NIST — Guide to General Server Security</span></span>
+    </a>
+    <a class="ref-link nist" href="https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final" target="_blank" rel="noopener">
+      <span class="ref-icon">NI</span>
+      <span class="ref-body"><span class="ref-name">NIST SP 800-53 Rev5</span>
+      <span class="ref-org">NIST — Security and Privacy Controls</span></span>
+    </a>
+    <a class="ref-link mitre" href="https://attack.mitre.org/matrices/enterprise/linux/" target="_blank" rel="noopener">
+      <span class="ref-icon">MT</span>
+      <span class="ref-body"><span class="ref-name">MITRE ATT&amp;CK Linux</span>
+      <span class="ref-org">MITRE — Tactics and techniques (Linux)</span></span>
+    </a>
+    <a class="ref-link mitre" href="https://attack.mitre.org/mitigations/enterprise/" target="_blank" rel="noopener">
+      <span class="ref-icon">MT</span>
+      <span class="ref-body"><span class="ref-name">ATT&amp;CK Mitigations</span>
+      <span class="ref-org">MITRE — Mitigations per technique</span></span>
+    </a>
+    <a class="ref-link mitre" href="https://gtfobins.github.io/" target="_blank" rel="noopener">
+      <span class="ref-icon">GT</span>
+      <span class="ref-body"><span class="ref-name">GTFOBins</span>
+      <span class="ref-org">UNIX binaries exploitable for privilege escalation</span></span>
+    </a>
+    <a class="ref-link cisa" href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">
+      <span class="ref-icon">CS</span>
+      <span class="ref-body"><span class="ref-name">CISA KEV Catalog</span>
+      <span class="ref-org">CISA — Known Exploited Vulnerabilities</span></span>
+    </a>
+    <a class="ref-link debian" href="https://www.debian.org/doc/manuals/securing-debian-manual/" target="_blank" rel="noopener">
+      <span class="ref-icon">DB</span>
+      <span class="ref-body"><span class="ref-name">Securing Debian Manual</span>
+      <span class="ref-org">Debian — Official security hardening documentation</span></span>
+    </a>
+    <a class="ref-link ubuntu" href="https://ubuntu.com/security/certifications/docs/usg" target="_blank" rel="noopener">
+      <span class="ref-icon">UB</span>
+      <span class="ref-body"><span class="ref-name">Ubuntu Security Guide (USG)</span>
+      <span class="ref-org">Canonical — CIS/DISA automated hardening</span></span>
+    </a>
+    <a class="ref-link ssi" href="https://linux-audit.com/" target="_blank" rel="noopener">
+      <span class="ref-icon">LA</span>
+      <span class="ref-body"><span class="ref-name">Linux Audit</span>
+      <span class="ref-org">Security auditing tools, guides and best practices</span></span>
+    </a>
+    <a class="ref-link ssi" href="https://nvd.nist.gov/" target="_blank" rel="noopener">
+      <span class="ref-icon">NV</span>
+      <span class="ref-body"><span class="ref-name">NVD — CVE Database</span>
+      <span class="ref-org">NIST — National Vulnerability Database</span></span>
+    </a>
+
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="content">
+
+<section id='dashboard' class='audit-section dashboard-section'>
+  <div class='section-header'>
+    <h2>SECURITY DASHBOARD</h2>
+    <span class='badge'>SUMMARY</span>
+    <span class='cat-pill'>Report 2026-03-18</span>
+  </div>
+  <div class='dashboard-body'>
+
+    <!-- TOP ROW: gauge + radar + domain list -->
+    <div class='dash-top-row'>
+
+      <!-- LEFT: global score gauge + meta -->
+      <div class='dash-left'>
+        <div class='global-gauge'>
+          <svg viewBox='0 0 200 140' width='200' height='140'>
+            <!-- Background arc (neutral, theme-aware) -->
+            <path d='M 20 105 A 80 80 0 0 1 180 105' fill='none' stroke='var(--bg4)' stroke-width='16' stroke-linecap='round'/>
+            <!-- Filled arc: dasharray = filled empty fills from left -->
+            <path d='M 20 105 A 80 80 0 0 1 180 105' fill='none' stroke='#d29922' stroke-width='16' stroke-linecap='round'
+              stroke-dasharray='160.8 251.3' stroke-dashoffset='0' style='transition:stroke-dasharray 1s ease'/>
+            <text x='100' y='95' text-anchor='middle' font-size='32' font-weight='700' fill='#d29922'>6.4</text>
+            <text x='100' y='118' text-anchor='middle' font-size='12' fill='#d29922' font-weight='600'>/ 10  Warning</text>
+          </svg>
+        </div>
+        <div class='global-meta'>
+          <div class='gm-title'>Global Security Score</div>
+          <div class='gm-machine'>raspberrypi</div>
+          <div class='gm-date'>2026-03-18 at 14:32:07</div>
+          <div class='gm-os'>Debian GNU/Linux 13 (trixie)</div>
+          <div class='gm-modules'>23 modules analyzed</div>
+          <div class='gm-legend'>
+            <span class='leg crit'>0-4 Critical</span>
+            <span class='leg warn'>5-7 Warning</span>
+            <span class='leg ok'>8-10 Good</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: radar chart -->
+      <div class='dash-radar'>
+        <div class='radar-title'>Security Skill Tree</div>
+        <canvas id='radar-canvas' width='380' height='380'
+          data-scores='7,5,7,5,6,8,7,10,10,5,7,8,10,10,10'
+          data-labels='SSH|ssh,Firewall|firewall,Users|users,Cron|cron,Kernel|kernel,SUID|suid,Network|netif,Logs|logs,Packages|packages,History|history,Integrity|integrity,Web|web,Database|database,Containers|containers,Services|filesvcs'>
+        </canvas>
+        <div id='radar-tooltip' class='radar-tooltip' style='display:none'></div>
+      </div>
+
+      <!-- RIGHT: domain list -->
+      <div class='dash-right'>
+        <div class='dl-title'>Domain Breakdown</div>
+        <div class='dl-list'><div class='dl-item warn' onclick='navToAnchor("ssh")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>SSH</span><span class='dl-score' style='color:#d29922'>7/10</span></div><div class='dl-tip'>🔑 Switch to key-only auth and kick root out of SSH. Your server is not a welcome mat.</div></div><div class='dl-item warn' onclick='navToAnchor("firewall")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>Firewall</span><span class='dl-score' style='color:#d29922'>5/10</span></div><div class='dl-tip'>🧱 A firewall with zero rules is just a decorative wall. Add some bricks.</div></div><div class='dl-item warn' onclick='navToAnchor("users")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>Users</span><span class='dl-score' style='color:#d29922'>7/10</span></div><div class='dl-tip'>👤 Extra UID=0 accounts are like spare master keys under the doormat.</div></div><div class='dl-item warn' onclick='navToAnchor("cron")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>Cron</span><span class='dl-score' style='color:#d29922'>5/10</span></div><div class='dl-tip'>⏰ wget|bash in a crontab is basically a self-destruct timer. Defuse it.</div></div><div class='dl-item warn' onclick='navToAnchor("kernel")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>Kernel</span><span class='dl-score' style='color:#d29922'>6/10</span></div><div class='dl-tip'>⚡ ASLR=0 is handing attackers a map of your memory. Turn it on.</div></div><div class='dl-item ok' onclick='navToAnchor("suid")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>SUID</span><span class='dl-score' style='color:#3fb950'>8/10</span></div><div class='dl-tip'>🎭 Unknown SUID binaries are actors with root credentials. Audit the cast.</div></div><div class='dl-item warn' onclick='navToAnchor("netif")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>Network</span><span class='dl-score' style='color:#d29922'>7/10</span></div><div class='dl-tip'>📡 A promiscuous interface is silently reading everyone's mail. Unplug it.</div></div><div class='dl-item ok' onclick='navToAnchor("logs")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>Logs</span><span class='dl-score' style='color:#3fb950'>10/10</span></div><div class='dl-tip'>📋 300+ failed logins and no alert? Your logs are screaming into the void.</div></div><div class='dl-item ok' onclick='navToAnchor("packages")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>Packages</span><span class='dl-score' style='color:#3fb950'>10/10</span></div><div class='dl-tip'>🔧 pentest tools on a production server is like keeping lockpicks in reception.</div></div><div class='dl-item warn' onclick='navToAnchor("history")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>History</span><span class='dl-score' style='color:#d29922'>5/10</span></div><div class='dl-tip'>🕵️ Shell history is an attacker's diary. Time for some redaction.</div></div><div class='dl-item warn' onclick='navToAnchor("integrity")'><div class='dl-header'><span class='dl-dot' style='background:#d29922'></span><span class='dl-name'>Integrity</span><span class='dl-score' style='color:#d29922'>7/10</span></div><div class='dl-tip'>🧬 Modified system binaries are the body-snatchers of Linux. Run debsums.</div></div><div class='dl-item ok' onclick='navToAnchor("web")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>Web</span><span class='dl-score' style='color:#3fb950'>8/10</span></div><div class='dl-tip'>🕷️ eval($_POST) in PHP is basically a drive-through window for hackers.</div></div><div class='dl-item ok' onclick='navToAnchor("database")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>Database</span><span class='dl-score' style='color:#3fb950'>10/10</span></div><div class='dl-tip'>🗄️ MySQL on 0.0.0.0 with no password is a public library with no locks.</div></div><div class='dl-item ok' onclick='navToAnchor("containers")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>Containers</span><span class='dl-score' style='color:#3fb950'>10/10</span></div><div class='dl-tip'>🐳 --privileged Docker is just running as root with extra steps.</div></div><div class='dl-item ok' onclick='navToAnchor("filesvcs")'><div class='dl-header'><span class='dl-dot' style='background:#3fb950'></span><span class='dl-name'>Services</span><span class='dl-score' style='color:#3fb950'>10/10</span></div><div class='dl-tip'>📬 Anonymous FTP in 2025 is a time capsule from 1994. Close it.</div></div></div>
+      </div>
+
+    </div><!-- /.dash-top-row -->
+
+  </div><!-- /.dashboard-body -->
+</section>
+
+<section id='domain-analysis' class='audit-section domain-analysis-section'>
+  <div class='section-header'>
+    <h2>DOMAIN ANALYSIS</h2>
+    <span class='badge'>DOMAINS</span>
+    <span class='cat-pill'>click to navigate to section</span>
+  </div>
+  <div class='domain-analysis-body'>
+    <div class='domains-grid'><a href='#ssh' class='domain-card warn' onclick='event.preventDefault();navToAnchor("ssh")'><div class='dc-top'><span class='dc-name'>SSH</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:70%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>7 / 10</span><ul class='domain-issues'><li>PasswordAuthentication enabled</li><li>X11Forwarding enabled</li></ul></div></a><a href='#firewall' class='domain-card warn' onclick='event.preventDefault();navToAnchor("firewall")'><div class='dc-top'><span class='dc-name'>Firewall</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:50%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>5 / 10</span><ul class='domain-issues'><li>Firewall inactive or permissive policy</li></ul></div></a><a href='#users' class='domain-card warn' onclick='event.preventDefault();navToAnchor("users")'><div class='dc-top'><span class='dc-name'>Users</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:70%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>7 / 10</span><ul class='domain-issues'><li>Accounts with empty passwords</li></ul></div></a><a href='#cron' class='domain-card warn' onclick='event.preventDefault();navToAnchor("cron")'><div class='dc-top'><span class='dc-name'>Cron</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:50%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>5 / 10</span><ul class='domain-issues'><li>Suspicious cron entries (curl/wget/base64/tmp)</li></ul></div></a><a href='#kernel' class='domain-card warn' onclick='event.preventDefault();navToAnchor("kernel")'><div class='dc-top'><span class='dc-name'>Kernel</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:60%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>6 / 10</span><ul class='domain-issues'><li>IP forwarding enabled</li><li>ICMP redirects accepted</li><li>Kernel pointers exposed</li></ul></div></a><a href='#suid' class='domain-card ok' onclick='event.preventDefault();navToAnchor("suid")'><div class='dc-top'><span class='dc-name'>SUID</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:80%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>8 / 10</span><ul class='domain-issues'><li>1 unusual SUID/SGID binaries</li></ul></div></a><a href='#netif' class='domain-card warn' onclick='event.preventDefault();navToAnchor("netif")'><div class='dc-top'><span class='dc-name'>Network</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:70%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>7 / 10</span><ul class='domain-issues'><li>Promiscuous interface detected</li></ul></div></a><a href='#logs' class='domain-card ok' onclick='event.preventDefault();navToAnchor("logs")'><div class='dc-top'><span class='dc-name'>Logs</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:100%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>10 / 10</span><p class='domain-ok'>No issue detected</p></div></a><a href='#packages' class='domain-card ok' onclick='event.preventDefault();navToAnchor("packages")'><div class='dc-top'><span class='dc-name'>Packages</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:100%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>10 / 10</span><p class='domain-ok'>No issue detected</p></div></a><a href='#history' class='domain-card warn' onclick='event.preventDefault();navToAnchor("history")'><div class='dc-top'><span class='dc-name'>History</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:50%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>5 / 10</span><ul class='domain-issues'><li>Deleted-but-open files detected</li><li>Files in /tmp or /dev/shm</li></ul></div></a><a href='#integrity' class='domain-card warn' onclick='event.preventDefault();navToAnchor("integrity")'><div class='dc-top'><span class='dc-name'>Integrity</span><span class='dc-badge'>Warning</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:70%;background:#d29922'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#d29922'>7 / 10</span><ul class='domain-issues'><li>Recently modified system binaries</li></ul></div></a><a href='#web' class='domain-card ok' onclick='event.preventDefault();navToAnchor("web")'><div class='dc-top'><span class='dc-name'>Web</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:80%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>8 / 10</span><ul class='domain-issues'><li>PHP allow_url_include enabled (RFI)</li></ul></div></a><a href='#database' class='domain-card ok' onclick='event.preventDefault();navToAnchor("database")'><div class='dc-top'><span class='dc-name'>Database</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:100%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>10 / 10</span><p class='domain-ok'>No issue detected</p></div></a><a href='#containers' class='domain-card ok' onclick='event.preventDefault();navToAnchor("containers")'><div class='dc-top'><span class='dc-name'>Containers</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:100%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>10 / 10</span><p class='domain-ok'>No issue detected</p></div></a><a href='#filesvcs' class='domain-card ok' onclick='event.preventDefault();navToAnchor("filesvcs")'><div class='dc-top'><span class='dc-name'>Services</span><span class='dc-badge'>Good</span></div><div class='dc-bar-wrap'><div class='dc-bar' style='width:100%;background:#3fb950'></div></div><div class='dc-score-line'><span class='dc-score' style='color:#3fb950'>10 / 10</span><p class='domain-ok'>No issue detected</p></div></a></div>
+  </div>
+</section><section id='mitre-matrix' class='audit-section mitre-section'>
+  <div class='section-header'>
+    <h2>MITRE ATT&amp;CK LINUX MATRIX</h2>
+    <span class='badge'>ATT&amp;CK</span>
+    <span class='cat-pill'>66 / 110 techniques impacted</span>
+  </div>
+  <div class='mitre-body'>
+    <div class='mitre-stats'>
+      <div class='ms-card crit'><div class='ms-num'>12</div><div class='ms-lbl'>Critical</div></div>
+      <div class='ms-card warn'><div class='ms-num'>18</div><div class='ms-lbl'>High</div></div>
+      <div class='ms-card poss'><div class='ms-num'>36</div><div class='ms-lbl'>Possible</div></div>
+      <div class='ms-card none'><div class='ms-num'>44</div><div class='ms-lbl'>Not triggered</div></div>
+    </div>
+    <p class='mitre-note'>&#9432; These counts reflect <strong>ATT&amp;CK technique cells</strong> triggered in the matrix — not the number of remediation actions. One finding can activate multiple techniques, and one technique can result from several different findings. Use the Remediation Plan for actionable fix counts.</p>
+    <div class='mitre-legend'>
+      <span class='leg-item t-crit'>Critical — vulnerabilities confirmed</span>
+      <span class='leg-item t-warn'>High — favorable conditions</span>
+      <span class='leg-item t-poss'>Possible — partial conditions</span>
+      <span class='leg-item t-none'>Not triggered</span>
+    </div>
+    <div class='mitre-flags'>
+      <div class='flags-title'>Active vulnerability flags contributing to the matrix:</div>
+      <div class='flags-list'><a href='#ssh' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("ssh")' title='Go to section'>SSH password auth enabled <span class='flag-arrow'>&#8594;</span></a><a href='#users' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("users")' title='Go to section'>sudo NOPASSWD entries <span class='flag-arrow'>&#8594;</span></a><a href='#cron' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("cron")' title='Go to section'>Suspicious cron job (wget/bash/base64) <span class='flag-arrow'>&#8594;</span></a><a href='#history' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("history")' title='Go to section'>Executables in /tmp or /dev/shm <span class='flag-arrow'>&#8594;</span></a><a href='#history' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("history")' title='Go to section'>Deleted-but-open files (rootkit indicator) <span class='flag-arrow'>&#8594;</span></a><a href='#rootkit' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("rootkit")' title='Go to section'>Rootkit indicators (chkrootkit/rkhunter) <span class='flag-arrow'>&#8594;</span></a><a href='#integrity' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("integrity")' title='Go to section'>Recently modified system binaries <span class='flag-arrow'>&#8594;</span></a><a href='#web' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("web")' title='Go to section'>PHP allow_url_include=On (RFI risk) <span class='flag-arrow'>&#8594;</span></a><a href='#firewall' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("firewall")' title='Go to section'>Firewall inactive <span class='flag-arrow'>&#8594;</span></a><a href='#netif' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("netif")' title='Go to section'>Promiscuous network interface <span class='flag-arrow'>&#8594;</span></a><a href='#netrecon' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("netrecon")' title='Go to section'>Duplicate MAC (ARP poisoning) <span class='flag-arrow'>&#8594;</span></a><a href='#kernel' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("kernel")' title='Go to section'>IP forwarding enabled <span class='flag-arrow'>&#8594;</span></a><a href='#suid' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("suid")' title='Go to section'>Unusual SUID/SGID binaries <span class='flag-arrow'>&#8594;</span></a><a href='#netrecon' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("netrecon")' title='Go to section'>fail2ban not installed <span class='flag-arrow'>&#8594;</span></a><a href='#processes' class='flag-item flag-link' onclick='event.preventDefault();navToAnchor("processes")' title='Go to section'>Suspicious process (from /tmp or /dev/shm) <span class='flag-arrow'>&#8594;</span></a></div>
+    </div>
+    <div class='mitre-table-wrap'>
+      <table class='mitre-table'>
+        <thead><tr><th class='tac-header' title='TA0043'>Reconnaissance<span class='tac-badge'>4</span></th><th class='tac-header' title='TA0001'>Initial Access<span class='tac-badge'>2</span></th><th class='tac-header' title='TA0002'>Execution<span class='tac-badge'>7</span></th><th class='tac-header' title='TA0003'>Persistence<span class='tac-badge'>6</span></th><th class='tac-header' title='TA0004'>Priv. Escalation<span class='tac-badge'>4</span></th><th class='tac-header' title='TA0005'>Defense Evasion<span class='tac-badge'>8</span></th><th class='tac-header' title='TA0006'>Credential Access<span class='tac-badge'>3</span></th><th class='tac-header' title='TA0007'>Discovery<span class='tac-badge'>6</span></th><th class='tac-header' title='TA0008'>Lateral Movement<span class='tac-badge'>4</span></th><th class='tac-header' title='TA0009'>Collection<span class='tac-badge'>5</span></th><th class='tac-header' title='TA0011'>C2<span class='tac-badge'>7</span></th><th class='tac-header' title='TA0010'>Exfiltration<span class='tac-badge'>6</span></th><th class='tac-header' title='TA0040'>Impact<span class='tac-badge'>4</span></th></tr></thead>
+        <tbody><tr><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1595/' target='_blank' rel='noopener'>Active Scanning<br><small>T1595</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1190/' target='_blank' rel='noopener'>Exploit Public App<br><small>T1190</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1059/004/' target='_blank' rel='noopener'>Unix Shell<br><small>T1059.004</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1053/003/' target='_blank' rel='noopener'>Cron Job<br><small>T1053.003</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1548/003/' target='_blank' rel='noopener'>Sudo/Sudoedit<br><small>T1548.003</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1562/001/' target='_blank' rel='noopener'>Disable AV/FW<br><small>T1562.001</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1110/' target='_blank' rel='noopener'>Brute Force<br><small>T1110</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1087/' target='_blank' rel='noopener'>Account Discovery<br><small>T1087</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1021/004/' target='_blank' rel='noopener'>SSH Lateral Mvt<br><small>T1021.004</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1560/' target='_blank' rel='noopener'>Archive Collected<br><small>T1560</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1071/001/' target='_blank' rel='noopener'>Web Protocols<br><small>T1071.001</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1041/' target='_blank' rel='noopener'>Exfil over C2<br><small>T1041</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1486/' target='_blank' rel='noopener'>Data Encrypted<br><small>T1486</small></a></td></tr><tr><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1592/' target='_blank' rel='noopener'>Host Recon<br><small>T1592</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1133/' target='_blank' rel='noopener'>External Remote Svc<br><small>T1133</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1059/006/' target='_blank' rel='noopener'>Python<br><small>T1059.006</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1543/002/' target='_blank' rel='noopener'>Systemd Service<br><small>T1543.002</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1068/' target='_blank' rel='noopener'>Exploit Vulnerability<br><small>T1068</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1070/' target='_blank' rel='noopener'>Indicator Removal<br><small>T1070</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1552/003/' target='_blank' rel='noopener'>Bash History<br><small>T1552.003</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1082/' target='_blank' rel='noopener'>System Info Disc<br><small>T1082</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1021/001/' target='_blank' rel='noopener'>Remote Desktop<br><small>T1021.001</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1005/' target='_blank' rel='noopener'>Data from Local Sys<br><small>T1005</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1071/004/' target='_blank' rel='noopener'>DNS C2<br><small>T1071.004</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1048/' target='_blank' rel='noopener'>Exfil Alt Protocol<br><small>T1048</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1490/' target='_blank' rel='noopener'>Inhibit Sys Recovery<br><small>T1490</small></a></td></tr><tr><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1590/' target='_blank' rel='noopener'>Network Recon<br><small>T1590</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1078/' target='_blank' rel='noopener'>Valid Accounts<br><small>T1078</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1059/007/' target='_blank' rel='noopener'>JavaScript<br><small>T1059.007</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1547/006/' target='_blank' rel='noopener'>Kernel Modules<br><small>T1547.006</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1055/' target='_blank' rel='noopener'>Process Injection<br><small>T1055</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1027/' target='_blank' rel='noopener'>Obfuscated Files<br><small>T1027</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1552/001/' target='_blank' rel='noopener'>Credentials in Files<br><small>T1552.001</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1083/' target='_blank' rel='noopener'>File/Dir Discovery<br><small>T1083</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1210/' target='_blank' rel='noopener'>Exploit Remote Svc<br><small>T1210</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1039/' target='_blank' rel='noopener'>Data from Net Share<br><small>T1039</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1095/' target='_blank' rel='noopener'>Non-App Layer Proto<br><small>T1095</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1052/' target='_blank' rel='noopener'>Exfil via Physical<br><small>T1052</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1489/' target='_blank' rel='noopener'>Service Stop<br><small>T1489</small></a></td></tr><tr><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1046/' target='_blank' rel='noopener'>Network Svc Scan<br><small>T1046</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1566/' target='_blank' rel='noopener'>Phishing<br><small>T1566</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1053/003/' target='_blank' rel='noopener'>Cron<br><small>T1053.003</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1037/004/' target='_blank' rel='noopener'>RC Scripts<br><small>T1037.004</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1611/' target='_blank' rel='noopener'>Escape to Host<br><small>T1611</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1055/' target='_blank' rel='noopener'>Process Injection<br><small>T1055</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1040/' target='_blank' rel='noopener'>Network Sniffing<br><small>T1040</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1046/' target='_blank' rel='noopener'>Network Svc Scan<br><small>T1046</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1570/' target='_blank' rel='noopener'>Lateral Tool Transfer<br><small>T1570</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1074/' target='_blank' rel='noopener'>Data Staged<br><small>T1074</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1572/' target='_blank' rel='noopener'>Protocol Tunneling<br><small>T1572</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1567/' target='_blank' rel='noopener'>Exfil via Web Svc<br><small>T1567</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1491/001/' target='_blank' rel='noopener'>Defacement Local<br><small>T1491.001</small></a></td></tr><tr><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1018/' target='_blank' rel='noopener'>Remote Sys Discov<br><small>T1018</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1195/' target='_blank' rel='noopener'>Supply Chain<br><small>T1195</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1203/' target='_blank' rel='noopener'>Exploit for Execution<br><small>T1203</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1136/' target='_blank' rel='noopener'>Create Account<br><small>T1136</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1078/' target='_blank' rel='noopener'>Valid Accounts<br><small>T1078</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1036/' target='_blank' rel='noopener'>Masquerading<br><small>T1036</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1003/' target='_blank' rel='noopener'>OS Credential Dump<br><small>T1003</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1057/' target='_blank' rel='noopener'>Process Discovery<br><small>T1057</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1534/' target='_blank' rel='noopener'>Internal Spearphishing<br><small>T1534</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1119/' target='_blank' rel='noopener'>Automated Collection<br><small>T1119</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1090/' target='_blank' rel='noopener'>Proxy<br><small>T1090</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1029/' target='_blank' rel='noopener'>Scheduled Transfer<br><small>T1029</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1499/' target='_blank' rel='noopener'>Endpoint DoS<br><small>T1499</small></a></td></tr><tr><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1040/' target='_blank' rel='noopener'>Network Sniffing<br><small>T1040</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1199/' target='_blank' rel='noopener'>Trusted Relationship<br><small>T1199</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1569/' target='_blank' rel='noopener'>System Services<br><small>T1569</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1098/' target='_blank' rel='noopener'>Account Manipulation<br><small>T1098</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1574/006/' target='_blank' rel='noopener'>Dynamic Linker<br><small>T1574.006</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1564/001/' target='_blank' rel='noopener'>Hidden Files<br><small>T1564.001</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1558/' target='_blank' rel='noopener'>Steal Kerberos Ticket<br><small>T1558</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1016/' target='_blank' rel='noopener'>Sys Network Config<br><small>T1016</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1550/' target='_blank' rel='noopener'>Use Alt Auth Material<br><small>T1550</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1056/' target='_blank' rel='noopener'>Input Capture<br><small>T1056</small></a></td><td class='tech-cell t-warn'><a href='https://attack.mitre.org/techniques/T1219/' target='_blank' rel='noopener'>Remote Access Tool<br><small>T1219</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1020/' target='_blank' rel='noopener'>Automated Exfil<br><small>T1020</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1485/' target='_blank' rel='noopener'>Data Destruction<br><small>T1485</small></a></td></tr><tr><td class='tech-cell t-empty'></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1091/' target='_blank' rel='noopener'>Removable Media<br><small>T1091</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1204/' target='_blank' rel='noopener'>User Execution<br><small>T1204</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1505/003/' target='_blank' rel='noopener'>Web Shell<br><small>T1505.003</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1134/' target='_blank' rel='noopener'>Access Token Manip<br><small>T1134</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1553/' target='_blank' rel='noopener'>Subvert Trust Ctrl<br><small>T1553</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1539/' target='_blank' rel='noopener'>Steal Web Session Cookie<br><small>T1539</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1049/' target='_blank' rel='noopener'>Sys Network Conns<br><small>T1049</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1563/' target='_blank' rel='noopener'>Remote Svc Session Hijack<br><small>T1563</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1113/' target='_blank' rel='noopener'>Screen Capture<br><small>T1113</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1102/' target='_blank' rel='noopener'>Web Service C2<br><small>T1102</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1030/' target='_blank' rel='noopener'>Data Transfer Limits<br><small>T1030</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1496/' target='_blank' rel='noopener'>Resource Hijacking<br><small>T1496</small></a></td></tr><tr><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1059/' target='_blank' rel='noopener'>Cmd/Script Interp<br><small>T1059</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1525/' target='_blank' rel='noopener'>Implant Container Img<br><small>T1525</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1484/' target='_blank' rel='noopener'>Domain Policy Mod<br><small>T1484</small></a></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1601/' target='_blank' rel='noopener'>Modify System Img<br><small>T1601</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1555/' target='_blank' rel='noopener'>Creds from Stores<br><small>T1555</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1033/' target='_blank' rel='noopener'>Sys Owner/User Disc<br><small>T1033</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1080/' target='_blank' rel='noopener'>Taint Shared Content<br><small>T1080</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1530/' target='_blank' rel='noopener'>Data from Cloud<br><small>T1530</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1573/' target='_blank' rel='noopener'>Encrypted Channel<br><small>T1573</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1561/' target='_blank' rel='noopener'>Disk Wipe<br><small>T1561</small></a></td></tr><tr><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1106/' target='_blank' rel='noopener'>Native API<br><small>T1106</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1574/' target='_blank' rel='noopener'>Hijack Exec Flow<br><small>T1574</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1014/' target='_blank' rel='noopener'>Rootkit<br><small>T1014</small></a></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1606/' target='_blank' rel='noopener'>Forge Credentials<br><small>T1606</small></a></td><td class='tech-cell t-poss'><a href='https://attack.mitre.org/techniques/T1069/' target='_blank' rel='noopener'>Permission Groups<br><small>T1069</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td><td class='tech-cell t-crit'><a href='https://attack.mitre.org/techniques/T1105/' target='_blank' rel='noopener'>Ingress Tool Transfer<br><small>T1105</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td></tr><tr><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1556/' target='_blank' rel='noopener'>Modify Auth Process<br><small>T1556</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1542/' target='_blank' rel='noopener'>Pre-OS Boot<br><small>T1542</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1007/' target='_blank' rel='noopener'>System Service Disc<br><small>T1007</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td><td class='tech-cell t-none'><a href='https://attack.mitre.org/techniques/T1008/' target='_blank' rel='noopener'>Fallback Channels<br><small>T1008</small></a></td><td class='tech-cell t-empty'></td><td class='tech-cell t-empty'></td></tr></tbody>
+      </table>
+    </div>
+    <div class='mitre-footer'>
+      Based on MITRE ATT&amp;CK v14 Enterprise / Linux platform.
+      Click any technique to open the ATT&amp;CK knowledge base.
+      Coloring is automatic based on audit findings — not exhaustive.
+    </div>
+  </div>
+</section>
+<section id='remediation' class='audit-section rem-section'>
+  <div class='section-header'>
+    <h2>REMEDIATION PLAN</h2>
+    <span class='badge'>REMEDIATION</span>
+    <span class='cat-pill'>21 actions identified</span>
+  </div>
+  <div class='rem-body-wrap'>
+    <div class='rem-summary'>
+      <div class='rem-sum-card p1'><span class='rem-sum-num'>6</span><span class='rem-sum-lbl'>Critical</span></div>
+      <div class='rem-sum-card p2'><span class='rem-sum-num'>13</span><span class='rem-sum-lbl'>High priority</span></div>
+      <div class='rem-sum-card p3'><span class='rem-sum-num'>2</span><span class='rem-sum-lbl'>Medium</span></div>
+      <div class='rem-disclaimer'>
+        <p>These remediations are automatically generated from detected findings. Test in a validation environment before deploying to production.</p>
+        <p class='rem-disclaimer-note'>&#9432; Remediation counts reflect <strong>fix actions</strong>, not ATT&amp;CK technique cells. One finding may trigger multiple MITRE techniques while generating a single action — counts between the two sections are intentionally different by design.</p>
+      </div>
+    </div>
+    <div class='rem-group-title p1-title'>Critical actions — address immediately</div><div class='rem-card p1'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>CRITICAL</span>
+    <span class='rem-cat'>SSH</span>
+    <span class='rem-title'>Enforce SSH key authentication only</span>
+    <a href='#ssh' class='rem-section-link' onclick='event.preventDefault();navToAnchor("ssh")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Password-based SSH is vulnerable to brute-force. Switch to public key authentication.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config &amp;&amp; systemctl restart sshd</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark SSH</span>
+  </div>
+</div><div class='rem-card p1'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>CRITICAL</span>
+    <span class='rem-cat'>Firewall</span>
+    <span class='rem-title'>Enable and configure UFW firewall</span>
+    <a href='#firewall' class='rem-section-link' onclick='event.preventDefault();navToAnchor("firewall")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>The firewall is currently inactive. All ports are exposed to the network.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>ufw default deny incoming &amp;&amp; ufw default allow outgoing &amp;&amp; ufw allow ssh &amp;&amp; ufw enable</pre></div>
+    <span class='rem-ref'>Ref: CIS Linux Benchmark</span>
+  </div>
+</div><div class='rem-card p1'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>CRITICAL</span>
+    <span class='rem-cat'>Users</span>
+    <span class='rem-title'>Remove empty password accounts</span>
+    <a href='#users' class='rem-section-link' onclick='event.preventDefault();navToAnchor("users")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Accounts with empty passwords allow passwordless local login — a critical risk.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>awk -F: '($2=="quot;"quot;) {print $1}' /etc/shadow\npasswd -e <lt;username>gt;</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark</span>
+  </div>
+</div><div class='rem-card p1'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>CRITICAL</span>
+    <span class='rem-cat'>Persistence</span>
+    <span class='rem-title'>Investigate suspicious cron entries</span>
+    <a href='#cron' class='rem-section-link' onclick='event.preventDefault();navToAnchor("cron")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Cron entries running curl/wget/base64 or from /tmp are a strong indicator of malware persistence.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>crontab -l &amp;&amp; ls -la /etc/cron* /var/spool/cron/crontabs/\ncrontab -e</pre></div>
+    <span class='rem-ref'>Ref: MITRE T1053.003</span>
+  </div>
+</div><div class='rem-card p1'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>CRITICAL</span>
+    <span class='rem-cat'>Forensics</span>
+    <span class='rem-title'>Investigate deleted-but-open files</span>
+    <a href='#history' class='rem-section-link' onclick='event.preventDefault();navToAnchor("history")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Processes holding open deleted files are a strong rootkit/malware indicator.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>lsof | grep deleted\nls -la /proc/<lt;PID>gt;/exe</pre></div>
+    <span class='rem-ref'>Ref: MITRE T1036</span>
+  </div>
+</div><div class='rem-card p1'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>CRITICAL</span>
+    <span class='rem-cat'>Web</span>
+    <span class='rem-title'>Disable PHP allow_url_include</span>
+    <a href='#web' class='rem-section-link' onclick='event.preventDefault();navToAnchor("web")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>allow_url_include=On enables Remote File Inclusion (RFI) attacks — an attacker can include a remote PHP file for RCE.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>sed -i 's/allow_url_include = On/allow_url_include = Off/' /etc/php/*/php.ini\nphp-fpm reload || apachectl restart</pre></div>
+    <span class='rem-ref'>Ref: OWASP RFI / CIS PHP</span>
+  </div>
+</div><div class='rem-group-title p2-title'>High priority actions</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Network</span>
+    <span class='rem-title'>Disable ICMP redirect acceptance</span>
+    <a href='#kernel' class='rem-section-link' onclick='event.preventDefault();navToAnchor("kernel")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Accepting ICMP redirects allows an attacker to manipulate routing tables (MITM).</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>sysctl -w net.ipv4.conf.all.accept_redirects=0\necho 'net.ipv4.conf.all.accept_redirects=0' >gt;>gt; /etc/sysctl.conf</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Network</span>
+    <span class='rem-title'>Disable IP forwarding if not a router</span>
+    <a href='#kernel' class='rem-section-link' onclick='event.preventDefault();navToAnchor("kernel")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>IP forwarding is enabled. On a non-router host this allows traffic to be relayed through the machine.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>sysctl -w net.ipv4.ip_forward=0\necho 'net.ipv4.ip_forward=0' >gt;>gt; /etc/sysctl.conf &amp;&amp; sysctl -p</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark / NIST SP 800-123</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Kernel</span>
+    <span class='rem-title'>Restrict kernel pointer and dmesg exposure</span>
+    <a href='#kernel' class='rem-section-link' onclick='event.preventDefault();navToAnchor("kernel")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Kernel pointers and dmesg output visible to unprivileged users — aids exploit development.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>echo 'kernel.dmesg_restrict=1' >gt;>gt; /etc/sysctl.conf\necho 'kernel.kptr_restrict=2' >gt;>gt; /etc/sysctl.conf\nsysctl -p</pre></div>
+    <span class='rem-ref'>Ref: CIS Linux Benchmark</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Security</span>
+    <span class='rem-title'>Investigate unusual SUID/SGID binaries</span>
+    <a href='#suid' class='rem-section-link' onclick='event.preventDefault();navToAnchor("suid")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Unknown SUID binaries are a primary privilege escalation vector. Verify or remove them.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>chmod u-s /path/to/binary\n# Or remove: rm -f /path/to/binary</pre></div>
+    <span class='rem-ref'>Ref: MITRE T1548.001 / GTFOBins</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>SSH</span>
+    <span class='rem-title'>Disable X11 forwarding</span>
+    <a href='#ssh' class='rem-section-link' onclick='event.preventDefault();navToAnchor("ssh")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>X11 forwarding exposes the display server to the remote host and enables GUI-based attacks.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>sed -i 's/^X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config &amp;&amp; systemctl restart sshd</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark SSH</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>SSH</span>
+    <span class='rem-title'>Reduce SSH MaxAuthTries</span>
+    <a href='#ssh' class='rem-section-link' onclick='event.preventDefault();navToAnchor("ssh")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>A high MaxAuthTries value allows more brute-force attempts per connection.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>sed -i 's/^#*MaxAuthTries.*/MaxAuthTries 3/' /etc/ssh/sshd_config &amp;&amp; systemctl restart sshd</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark SSH</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Network</span>
+    <span class='rem-title'>Investigate promiscuous network interface</span>
+    <a href='#netif' class='rem-section-link' onclick='event.preventDefault();navToAnchor("netif")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>A promiscuous interface captures all network traffic — classic sniffer indicator.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>ip link show | grep PROMISC\nip link set <lt;iface>gt; -promisc</pre></div>
+    <span class='rem-ref'>Ref: MITRE T1040</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Network</span>
+    <span class='rem-title'>Investigate duplicate MAC address (ARP spoofing)</span>
+    <a href='#netrecon' class='rem-section-link' onclick='event.preventDefault();navToAnchor("netrecon")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Two hosts sharing the same MAC address indicates ARP poisoning — active MITM attack.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>arp -a | sort\n# Block at switch level or alert network team</pre></div>
+    <span class='rem-ref'>Ref: MITRE T1557.002</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Services</span>
+    <span class='rem-title'>Stop and remove suspected crypto-miner service</span>
+    <a href='#services' class='rem-section-link' onclick='event.preventDefault();navToAnchor("services")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>A service matching known crypto-miner names is running. This indicates a compromised host.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>systemctl stop <lt;service>gt; &amp;&amp; systemctl disable <lt;service>gt;\nrm -f /path/to/miner</pre></div>
+    <span class='rem-ref'>Ref: MITRE T1496</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Hardening</span>
+    <span class='rem-title'>Install and configure fail2ban</span>
+    <a href='#ssh' class='rem-section-link' onclick='event.preventDefault();navToAnchor("ssh")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>fail2ban is not installed — brute-force attacks on SSH and other services go unchecked.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>apt install fail2ban -y &amp;&amp; systemctl enable fail2ban &amp;&amp; systemctl start fail2ban</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark / MITRE T1110</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>SSH</span>
+    <span class='rem-title'>Deploy SSH public key authentication</span>
+    <a href='#ssh' class='rem-section-link' onclick='event.preventDefault();navToAnchor("ssh")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Generate and deploy key pairs to all accounts before disabling password authentication.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>ssh-keygen -t ed25519\nssh-copy-id user@host\nsed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config &amp;&amp; systemctl restart sshd</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark SSH / MITRE T1110</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Users</span>
+    <span class='rem-title'>Remove NOPASSWD entries from sudoers</span>
+    <a href='#users' class='rem-section-link' onclick='event.preventDefault();navToAnchor("users")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>NOPASSWD sudo entries allow privilege escalation without authentication.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>visudo\n# Remove lines containing NOPASSWD\n# Also check /etc/sudoers.d/*</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark / MITRE T1548</span>
+  </div>
+</div><div class='rem-card p2'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>HIGH</span>
+    <span class='rem-cat'>Network</span>
+    <span class='rem-title'>Secure Wi-Fi credentials storage</span>
+    <a href='#wifi' class='rem-section-link' onclick='event.preventDefault();navToAnchor("wifi")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Wi-Fi PSK credentials are stored in plaintext. Restrict access to these files.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>chmod 600 /etc/NetworkManager/system-connections/*\nchmod 700 /etc/NetworkManager/system-connections/</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark</span>
+  </div>
+</div><div class='rem-group-title p3-title'>Hardening actions</div><div class='rem-card p3'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>MEDIUM</span>
+    <span class='rem-cat'>Hardening</span>
+    <span class='rem-title'>Enable automatic security updates</span>
+    <a href='#packages' class='rem-section-link' onclick='event.preventDefault();navToAnchor("packages")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Ensure the system receives security patches automatically.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre>apt install unattended-upgrades -y &amp;&amp; dpkg-reconfigure unattended-upgrades</pre></div>
+    <span class='rem-ref'>Ref: CIS Benchmark</span>
+  </div>
+</div><div class='rem-card p3'>
+  <div class='rem-card-header'>
+    <span class='rem-prio-badge'>MEDIUM</span>
+    <span class='rem-cat'>Hardening</span>
+    <span class='rem-title'>Restrict /tmp with noexec mount option</span>
+    <a href='#os-info' class='rem-section-link' onclick='event.preventDefault();navToAnchor("os-info")'>&rarr; Go to section</a>
+  </div>
+  <div class='rem-body'>
+    <p class='rem-detail'>Mounting /tmp with noexec prevents malware from executing scripts placed there.</p>
+    <div class='rem-cmd'><span class='rem-cmd-label'>Command:</span><pre># Add to /etc/fstab:\ntmpfs /tmp tmpfs defaults,noexec,nosuid,nodev 0 0\nmount -o remount /tmp</pre></div>
+    <span class='rem-ref'>Ref: CIS Linux Benchmark</span>
+  </div>
+</div>
+  </div>
+</section>
+<section id='logs-section' class='audit-section logs-section'>
+  <div class='section-header'>
+    <h2>AUDIT LOGS</h2>
+    <span class='badge'>LOGS</span>
+    <span class='cat-pill'>23 modules</span>
+  </div>
+  <div class='logs-body'>
+    <p class='logs-intro'>Raw output from all executed audit modules. Click a card to expand.</p>
+    <div class='logs-grid'>
+<div class='log-cat-group' id='log-cat-system'>
+  <div class='log-cat-header' data-logcat='system'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>System</span>
+    <span class='log-cat-count'>2</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='os-info'>
+  <div class='log-card-header' data-logid='os-info'>
+    <span class='log-badge'>OS-INFO</span>
+    <span class='log-name'>OS Information</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil info log-conseil'>
+      <span class='conseil-icon'>INFO</span>
+      <span class='conseil-text'>Check OS version and kernel. An outdated kernel exposes known CVEs (Dirty COW, PolKit, sudo heap overflow). Verify EOL status. Long uptime (>30d) may indicate pending updates.</span>
+    </div>
+    <pre class='output'>Hostname         : raspberrypi
+OS               : Debian GNU/Linux 13 (trixie)
+Kernel           : 6.6.31+rpt-rpi-v8
+Architecture     : aarch64
+RAM Total        : 7.8 GB
+Uptime           : 3 days, 4:22
+---- DISKS
+/dev/mmcblk0p2   59G  18G  38G  33% /
+/dev/mmcblk0p1  510M  77M 433M  16% /boot/firmware</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Hardening'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='kernel'>
+  <div class='log-card-header' data-logid='kernel'>
+    <span class='log-badge'>KERNEL</span>
+    <span class='log-name'>Kernel & Boot Security</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Check ASLR (randomize_va_space=2), dmesg restrictions, ptrace scope. Raspberry Pi: verify boot config. [THREAT: Kernel exploits, memory attacks, boot-time persistence]</span>
+    </div>
+    <pre class='output'>---- Kernel security parameters
+  kernel.randomize_va_space    : 0    [!] ASLR disabled — should be 2
+  kernel.dmesg_restrict        : 0    [!] dmesg readable by all users
+  kernel.kptr_restrict         : 0    [!] kernel pointers exposed
+  net.ipv4.ip_forward          : 1    [!] IP forwarding enabled
+  net.ipv4.conf.all.accept_redirects : 1  [!] ICMP redirects accepted
+  net.ipv4.tcp_syncookies      : 1    [✔] SYN flood protection on
+---- Raspberry Pi boot config (/boot/firmware/config.txt)
+  arm_64bit=1
+  gpu_mem=76</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Kernel'></div>
+  </div>
+  </div>
+</div>
+  </div>
+</div>
+<div class='log-cat-group' id='log-cat-security'>
+  <div class='log-cat-header' data-logcat='security'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>Security</span>
+    <span class='log-cat-count'>6</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='users'>
+  <div class='log-card-header' data-logid='users'>
+    <span class='log-badge'>USERS</span>
+    <span class='log-name'>Users & Groups</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Check for accounts with UID=0 other than root (backdoor). Accounts with empty passwords are critical risks. Watch for suspicious shells on service accounts.</span>
+    </div>
+    <pre class='output'>---- Local users with login shells
+pi      uid=1000  groups=pi,adm,dialout,cdrom,sudo,audio,video  shell=/bin/bash
+root    uid=0     groups=root  shell=/bin/bash  [root account]
+---- Sudo access
+pi  ALL=(ALL:ALL) ALL
+---- NOPASSWD entries: 0
+---- UID=0 accounts (other than root): none
+[✔] No empty/locked passwords detected</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Users'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='firewall'>
+  <div class='log-card-header' data-logid='firewall'>
+    <span class='log-badge'>FIREWALL</span>
+    <span class='log-name'>Firewall Status</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>A machine without a firewall is fully exposed. Default ACCEPT policy = all ports reachable. Verify INPUT/OUTPUT/FORWARD chains. [THREAT: Direct network exploitation]</span>
+    </div>
+    <pre class='output'>Status: inactive
+ufw is not active
+[!] No firewall rules loaded — all ports exposed to network</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Firewall'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='ssh'>
+  <div class='log-card-header' data-logid='ssh'>
+    <span class='log-badge'>SSH</span>
+    <span class='log-name'>SSH Configuration</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>PermitRootLogin yes = direct root access risk. PasswordAuthentication yes = brute-force possible. Check AllowUsers and authorized_keys carefully.</span>
+    </div>
+    <pre class='output'>---- /etc/ssh/sshd_config (effective settings)
+  PermitRootLogin              : no
+  PasswordAuthentication       : yes
+  PermitEmptyPasswords         : no
+  X11Forwarding                : yes
+  MaxAuthTries                 : 6
+  Port                         : 22
+  Protocol                     : 2
+  AllowAgentForwarding         : yes
+[!] PasswordAuthentication is enabled — brute-force risk
+[!] X11Forwarding is enabled — display server exposure
+[!] MaxAuthTries 6 — consider reducing to 3</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='SSH'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='cron'>
+  <div class='log-card-header' data-logid='cron'>
+    <span class='log-badge'>CRON</span>
+    <span class='log-name'>Scheduled Tasks (Cron)</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Malware often persists via cron. Check for entries running from /tmp, curl/wget pipes, base64 commands. [THREAT: Backdoor persistence, miner scheduling, reverse shell]</span>
+    </div>
+    <pre class='output'>---- root crontab
+@reboot  /usr/sbin/cron
+---- /etc/cron.d/
+logrotate  0 4 * * *  root  /usr/sbin/logrotate /etc/logrotate.conf
+---- /var/spool/cron/crontabs/pi
+*/5 * * * *  /home/pi/monitor.py >gt;>gt; /var/log/monitor.log 2>gt;&amp;1
+---- No suspicious entries (no curl/wget/base64/tmp)</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Persistence'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='suid'>
+  <div class='log-card-header' data-logid='suid'>
+    <span class='log-badge'>SUID</span>
+    <span class='log-name'>SUID / SGID Files</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>SUID files run as root regardless of who executes them. Unknown SUID binaries in unusual paths = classic privilege escalation. [THREAT: GTFOBins, local privesc]</span>
+    </div>
+    <pre class='output'>---- HOST SYSTEM — SUID/SGID binaries
+/usr/bin/sudo          [known]
+/usr/bin/passwd        [known]
+/usr/bin/su            [known]
+/usr/bin/newgrp        [known]
+/usr/bin/gpasswd       [known]
+/usr/lib/openssh/ssh-keysign  [known]
+/tmp/.update-helper    <lt;-- UNUSUAL — not in known whitelist
+---- 1 unusual SUID binary detected</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Security'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='logs'>
+  <div class='log-card-header' data-logid='logs'>
+    <span class='log-badge'>LOGS</span>
+    <span class='log-name'>System Logs</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Multiple failed SSH logins = brute-force attempt. sudo usage from unexpected users is suspicious. [THREAT: Brute-force, unauthorized escalation, intrusion traces]</span>
+    </div>
+    <pre class='output'>---- Auth log analysis (last 500 lines)
+Failed password attempts: 3
+  Mar 18 09:14:22  sshd[2841]: Failed password for pi from 192.168.1.55 port 44210
+  Mar 18 09:15:01  sshd[2843]: Failed password for root from 192.168.1.55 port 44211
+  Mar 18 11:32:44  sshd[3102]: Failed password for pi from 10.0.0.8 port 51209
+Successful logins: 4
+  Mar 18 12:01:11  sshd[3241]: Accepted publickey for pi from 192.168.1.10
+[✔] No root login via SSH accepted
+---- sudo usage (last 24h)
+  Mar 18 12:03:44  pi : TTY=pts/0 ; COMMAND=/usr/bin/apt update</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Forensics'></div>
+  </div>
+  </div>
+</div>
+  </div>
+</div>
+<div class='log-cat-group' id='log-cat-network'>
+  <div class='log-cat-header' data-logcat='network'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>Network</span>
+    <span class='log-cat-count'>5</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='netif'>
+  <div class='log-card-header' data-logid='netif'>
+    <span class='log-badge'>NET-IF</span>
+    <span class='log-name'>Network Interfaces</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Unexpected interfaces (vpn, tun, tap) may indicate rogue tunnels or C2 channels. Promiscuous mode = possible sniffer. [THREAT: Exfiltration, pivoting, C2 tunnel]</span>
+    </div>
+    <pre class='output'>---- Network interfaces
+lo        UP  127.0.0.1/8
+eth0      UP  192.168.1.42/24  [CONNECTED]
+wlan0     UP  192.168.1.43/24  [CONNECTED]
+---- No promiscuous interfaces detected
+---- No unexpected tunnel interfaces (tun/tap/vpn)</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Network'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='ports'>
+  <div class='log-card-header' data-logid='ports'>
+    <span class='log-badge'>PORTS</span>
+    <span class='log-name'>Open Ports & Connections</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Unknown listening port = potential backdoor or C2. Port 0.0.0.0 (all interfaces) is more exposed than 127.0.0.1. [THREAT: Backdoor, C2 listener, lateral movement]</span>
+    </div>
+    <pre class='output'>---- Listening services
+tcp   0.0.0.0:22      sshd        [SSH]
+tcp   127.0.0.1:631   cupsd       [CUPS - local only]
+tcp6  :::22           sshd        [SSH IPv6]
+---- Active connections
+tcp  192.168.1.42:22  192.168.1.10:54322  ESTABLISHED
+---- No suspicious ports detected (no 4444/1337/31337)</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Network'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='wifi'>
+  <div class='log-card-header' data-logid='wifi'>
+    <span class='log-badge'>WIFI</span>
+    <span class='log-name'>Wi-Fi Configuration</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Saved Wi-Fi profiles may contain cleartext PSK. Rogue AP / evil-twin attacks are possible on open networks. [THREAT: Wi-Fi credential theft, evil twin]</span>
+    </div>
+    <pre class='output'>---- Saved Wi-Fi profiles
+Profile: HomeNetwork
+  SSID: HomeNetwork
+  PSK: [stored in /etc/NetworkManager/system-connections/HomeNetwork.nmconnection]
+[!] PSK stored in plaintext — restrict file permissions
+  Mode: Infrastructure  Security: WPA2-Personal
+---- No open/unsecured networks in saved profiles</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Network'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='ntp'>
+  <div class='log-card-header' data-logid='ntp'>
+    <span class='log-badge'>NTP</span>
+    <span class='log-name'>Time Source (NTP)</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil info log-conseil'>
+      <span class='conseil-icon'>INFO</span>
+      <span class='conseil-text'>Time drift > 5 min may indicate log tampering. Verify NTP source is a trusted server. Critical for SIEM correlation. [THREAT: Anti-forensics, log falsification]</span>
+    </div>
+    <pre class='output'>---- Time synchronisation status
+     timedatectl:  synchronized: yes
+     NTP service:  active
+     Time source:  ntp.ubuntu.com (stratum 2)
+     Offset:       +0.000142 seconds
+[✔] Clock synchronised — within acceptable range</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Network'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='netrecon'>
+  <div class='log-card-header' data-logid='netrecon'>
+    <span class='log-badge'>NET-RECON</span>
+    <span class='log-name'>Network Recon</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Modified /etc/hosts = DNS spoofing. Rogue resolver = traffic hijacking. Duplicate MACs = ARP poisoning. fail2ban absent = no brute-force protection. [THREAT: DNS spoofing, ARP poisoning, MITM]</span>
+    </div>
+    <pre class='output'>---- /etc/hosts analysis
+  127.0.0.1   localhost
+  127.0.1.1   raspberrypi
+  [✔] No suspicious entries detected
+---- DNS resolver
+  nameserver 192.168.1.1  [local router — standard]
+---- ARP table scan
+  192.168.1.1   aa:bb:cc:dd:ee:ff  [router]
+  192.168.1.10  11:22:33:44:55:66  [workstation]
+  [✔] No duplicate MACs detected
+---- fail2ban: not installed
+  [!] No brute-force protection active</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Network'></div>
+  </div>
+  </div>
+</div>
+  </div>
+</div>
+<div class='log-cat-group' id='log-cat-processes'>
+  <div class='log-cat-header' data-logcat='processes'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>Processes</span>
+    <span class='log-cat-count'>1</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='processes'>
+  <div class='log-card-header' data-logid='processes'>
+    <span class='log-badge'>PROC</span>
+    <span class='log-name'>Process List</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Check for processes running from /tmp, /dev/shm, /var/tmp or with random names. High CPU with no visible path = crypto-miner. [THREAT: Miner, RAT, rootkit, fileless malware]</span>
+    </div>
+    <pre class='output'>---- Running processes (selected)
+  PID  USER      COMMAND
+    1  root      /sbin/init
+  312  root      /usr/sbin/sshd -D
+  891  pi        bash
+ 1042  root      /usr/sbin/cron
+ 2831  pi        python3 /home/pi/monitor.py
+---- No suspicious processes detected (no /tmp or /dev/shm paths)</pre>
+  </div>
+</div>
+  </div>
+</div>
+<div class='log-cat-group' id='log-cat-packages'>
+  <div class='log-cat-header' data-logcat='packages'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>Packages</span>
+    <span class='log-cat-count'>2</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='packages'>
+  <div class='log-card-header' data-logid='packages'>
+    <span class='log-badge'>PKGS</span>
+    <span class='log-name'>Installed Packages</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Look for unusual tools (nmap, netcat, socat, hydra, hashcat). Attackers often install recon tools after initial access. [THREAT: Attacker tooling, lateral movement]</span>
+    </div>
+    <pre class='output'>---- Installed package check
+Checked 847 installed packages
+[✔] No pentest/attacker tools detected (nmap, netcat, hydra, etc.)
+---- Recently installed (last 7 days)
+  python3-flask  1.1.4  2026-03-15
+  nginx          1.22.1 2026-03-14</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Packages'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='services'>
+  <div class='log-card-header' data-logid='services'>
+    <span class='log-badge'>SERVICES</span>
+    <span class='log-name'>Services</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Unnecessary running services increase attack surface. Check for services running from /tmp or with unusual names. [THREAT: Backdoor service, persistence]</span>
+    </div>
+    <pre class='output'>---- Active systemd services
+sshd.service        active running
+cron.service        active running
+nginx.service       active running
+cups.service        active running
+bluetooth.service   active running
+---- No services running from /tmp or /dev/shm
+[✔] No known crypto-miner service names detected</pre>
+  </div>
+</div>
+  </div>
+</div>
+<div class='log-cat-group' id='log-cat-forensics'>
+  <div class='log-cat-header' data-logcat='forensics'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>Forensics</span>
+    <span class='log-cat-count'>3</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='history'>
+  <div class='log-card-header' data-logid='history'>
+    <span class='log-badge'>HISTORY</span>
+    <span class='log-name'>Bash History & IOCs</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>History reveals attacker post-exploitation steps. wget/curl piped to bash, base64 -d, /dev/tcp are C2 indicators. Files in /tmp and deleted-but-open FDs = rootkit/malware. [THREAT: C2 download, credential harvesting, fileless persistence]</span>
+    </div>
+    <pre class='output'>---- Bash history analysis (/root/.bash_history, /home/pi/.bash_history)
+  [✔] No wget/curl piped to bash
+  [✔] No base64 -d execution patterns
+  [✔] No /dev/tcp reverse shell patterns
+  [✔] No /tmp or /dev/shm execution
+---- Files in /tmp
+  /tmp/.update-helper  [!] executable file — matches SUID finding
+  /tmp/pip-build-tmp/  [normal pip build artefact]
+---- Open deleted file descriptors: none</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Forensics'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='rootkit'>
+  <div class='log-card-header' data-logid='rootkit'>
+    <span class='log-badge'>ROOTKIT</span>
+    <span class='log-name'>Kernel Modules & Rootkits</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Unknown kernel modules may be rootkits. chkrootkit/rkhunter detect known signatures and file tampering. dmesg anomalies reveal kernel-level attacks. [THREAT: Kernel rootkit, stealth backdoor, persistence]</span>
+    </div>
+    <pre class='output'>---- rkhunter (quick scan)
+  Checking for rootkits...       [ No warnings ]
+  Checking for trojans...        [ No warnings ]
+  Checking system commands...    [ No warnings ]
+---- chkrootkit
+  Checking for LKM trojans...    [ not infected ]
+  Checking for sniffer...        [ not infected ]
+  Checking for bindshell...      [ not infected ]
+[✔] No rootkit indicators detected</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Forensics'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='integrity'>
+  <div class='log-card-header' data-logid='integrity'>
+    <span class='log-badge'>INTEGRITY</span>
+    <span class='log-name'>File Integrity</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Modified system binaries = classic post-compromise indicator. debsums/rpm -Va verify checksums. Recently modified binaries in /bin /usr/bin are critical. [THREAT: Backdoored binaries, rootkit installation, supply chain]</span>
+    </div>
+    <pre class='output'>---- debsums check (system package file checksums)
+  Checking /bin, /usr/bin, /sbin, /usr/sbin...
+  [✔] All checksums match — no tampered binaries detected
+---- Recently modified system binaries (last 48h)
+  (none)
+[✔] File integrity check passed</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Integrity'></div>
+  </div>
+  </div>
+</div>
+  </div>
+</div>
+<div class='log-cat-group' id='log-cat-services'>
+  <div class='log-cat-header' data-logcat='services'>
+    <span class='log-cat-arrow'>&#9654;</span>
+    <span class='log-cat-label'>Services</span>
+    <span class='log-cat-count'>4</span>
+  </div>
+  <div class='log-cat-body'>
+<div class='log-card' id='web'>
+  <div class='log-card-header' data-logid='web'>
+    <span class='log-badge'>WEB</span>
+    <span class='log-name'>Web Stack Audit</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>eval()/base64_decode() in PHP = webshell. Files modified in last 48h in /var/www = backdoor. allow_url_include=On enables RFI. [THREAT: Webshell, RCE, PHP backdoor, file inclusion]</span>
+    </div>
+    <pre class='output'>---- nginx detected (v1.22.1)
+  Config: /etc/nginx/nginx.conf
+  Web root: /var/www/html
+---- PHP not detected
+---- Web root scan (/var/www/html)
+  [✔] No eval() / base64_decode() / shell_exec() patterns
+  [✔] No files modified in last 48h in web root
+  [✔] No allow_url_include=On
+[✔] Web stack appears clean</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Web'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='database'>
+  <div class='log-card-header' data-logid='database'>
+    <span class='log-badge'>DATABASE</span>
+    <span class='log-name'>Database Audit</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>DB exposed on 0.0.0.0 = network-accessible. root@% with no password = full compromise. pg_hba 'trust' = passwordless access. [THREAT: Data exfiltration, SQL injection pivot, credential theft]</span>
+    </div>
+    <pre class='output'>---- No MySQL/MariaDB installation detected
+---- No PostgreSQL installation detected
+---- No Redis installation detected
+[✔] No database services running</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Database'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='containers'>
+  <div class='log-card-header' data-logid='containers'>
+    <span class='log-badge'>CONTAINERS</span>
+    <span class='log-name'>Container Audit</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil critique log-conseil'>
+      <span class='conseil-icon'>CRITICAL</span>
+      <span class='conseil-text'>Privileged containers can escape to host root. Exposed docker socket = full host compromise. K8s secrets stored in plaintext. [THREAT: Container escape, privilege escalation, secret exfiltration]</span>
+    </div>
+    <pre class='output'>---- Docker not installed
+---- Podman not installed
+---- LXC not installed
+[✔] No container runtime detected</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Containers'></div>
+  </div>
+  </div>
+</div>
+<div class='log-card' id='filesvcs'>
+  <div class='log-card-header' data-logid='filesvcs'>
+    <span class='log-badge'>FILESVCS</span>
+    <span class='log-name'>File & Mail Services</span>
+    <span class='log-arrow'>&#9654;</span>
+  </div>
+  <div class='log-card-body'>
+    <div class='conseil important log-conseil'>
+      <span class='conseil-icon'>IMPORTANT</span>
+      <span class='conseil-text'>Anonymous FTP/SMB = unauthenticated access. NFS world-export / no_root_squash = root access. Open relay Postfix = spam pivot. [THREAT: Unauthenticated access, data exfiltration, open relay]</span>
+    </div>
+    <pre class='output'>---- FTP: not installed
+---- Samba/SMB: not installed
+---- NFS: not installed
+---- Postfix: not installed
+[✔] No file/mail services detected</pre>
+  <div class='log-footer'>
+    <div class='log-footer-check' data-remcat='Services'></div>
+  </div>
+  </div>
+</div>
+  </div>
+</div></div>
+  </div>
+</section>
+</div>
+
+<button id="back-to-top" title="Back to top">&#8679;</button>
+
+<script>
+var headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 58;
+
+// Known module anchors — clicking them scrolls to AUDIT LOGS and opens the card
+var MODULE_ANCHORS = ['os-info','users','processes','netif','ports','firewall','ssh','cron',
+  'suid','packages','services','logs','wifi','ntp','kernel','history','rootkit',
+  'integrity','web','database','containers','filesvcs','netrecon'];
+
+function openLogCard(anchor) {
+  // Close previously highlighted card
+  document.querySelectorAll('.log-card.log-active').forEach(function(c) {
+    c.classList.remove('log-active');
+  });
+  var card = document.getElementById(anchor);
+  if (!card || !card.classList.contains('log-card')) return;
+
+  // 1 — Open the parent log-cat-group if it's closed
+  var catGroup = card.closest('.log-cat-group');
+  if (catGroup && !catGroup.classList.contains('open')) {
+    var catId = catGroup.id.replace('log-cat-', '');
+    openLogCat(catId);
+  }
+
+  // 2 — Open the card itself
+  card.classList.add('open');
+  card.classList.add('log-active');
+  setLogDot(anchor, true);
+
+  // 3 — Scroll: wait one frame so display:flex is rendered, then scroll to card
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      var cardTop = card.getBoundingClientRect().top + window.scrollY - headerH - 12;
+      window.scrollTo({ top: cardTop, behavior: 'smooth' });
+    });
+  });
+}
+
+function navToAnchor(anchor) {
+  // If anchor is a module anchor, redirect to its log card
+  if (MODULE_ANCHORS.indexOf(anchor) !== -1) {
+    // First navigate the sidebar to logs-section active state
+    setActiveLink('logs-section');
+    var logsNav = document.querySelector('.nav-link[data-anchor="logs-section"]');
+    if (logsNav) ensureParentOpen(logsNav);
+    openLogCard(anchor);
+    return;
+  }
+  var el = document.getElementById(anchor);
+  if (!el) return;
+  var top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+  window.scrollTo({ top: top, behavior: 'smooth' });
+  setActiveLink(anchor);
+  var navLink = document.querySelector('.nav-link[data-anchor="' + anchor + '"]');
+  if (navLink) ensureParentOpen(navLink);
+}
+
+function openGroup(btn, ul) {
+  if (!ul) return;
+  ul.classList.add('open');
+  btn.classList.add('open');
+}
+function closeGroup(btn, ul) {
+  if (!ul) return;
+  ul.classList.remove('open');
+  btn.classList.remove('open');
+}
+function ensureParentOpen(linkEl) {
+  var ul = linkEl.closest('.cat-items');
+  if (!ul) return;
+  if (!ul.classList.contains('open')) {
+    ul.classList.add('open');
+    var btn = document.querySelector('[data-target="' + ul.id + '"]');
+    if (btn) btn.classList.add('open');
+  }
+}
+
+// All groups start CLOSED — wire up toggle only, no auto-open
+// All groups start CLOSED — wire up toggle + log-cat sync in one place below
+
+// AUDIT LOGS nav link: open its parent group when clicked, and keep it open
+var logsNavLink = document.querySelector('.nav-logs');
+if (logsNavLink) {
+  var _origClick = logsNavLink.onclick;
+  logsNavLink.addEventListener('click', function() {
+    ensureParentOpen(logsNavLink);
+  });
+}
+
+document.getElementById('expand-all').addEventListener('click', function() {
+  // Sidebar groups
+  document.querySelectorAll('.cat-toggle').forEach(function(btn) {
+    openGroup(btn, document.getElementById(btn.getAttribute('data-target')));
+  });
+  // Log category groups
+  document.querySelectorAll('.log-cat-group').forEach(function(grp) {
+    grp.classList.add('open');
+  });
+  // Log cards
+  document.querySelectorAll('.log-card').forEach(function(card) {
+    card.classList.add('open');
+    var anchor = card.id;
+    if (anchor) setLogDot(anchor, true);
+  });
+});
+document.getElementById('collapse-all').addEventListener('click', function() {
+  // Sidebar groups
+  document.querySelectorAll('.cat-toggle').forEach(function(btn) {
+    closeGroup(btn, document.getElementById(btn.getAttribute('data-target')));
+  });
+  // Log category groups
+  document.querySelectorAll('.log-cat-group').forEach(function(grp) {
+    grp.classList.remove('open');
+  });
+  // Log cards
+  document.querySelectorAll('.log-card').forEach(function(card) {
+    var wasOpen = card.classList.contains('open');
+    card.classList.remove('open');
+    card.classList.remove('log-active');
+    var anchor = card.id;
+    if (anchor && wasOpen) setLogDot(anchor, false);
+  });
+});
+
+document.getElementById('search-input').addEventListener('input', function() {
+  var q = this.value.trim().toLowerCase();
+  document.querySelectorAll('.nav-link').forEach(function(a) {
+    if (!q || a.textContent.toLowerCase().indexOf(q) !== -1) {
+      a.classList.remove('hidden-search');
+      if (q) ensureParentOpen(a);
+    } else {
+      a.classList.add('hidden-search');
+    }
+  });
+});
+
+var sections  = document.querySelectorAll('.audit-section');
+var navLinks  = document.querySelectorAll('.nav-link');
+
+// Intercept nav-link clicks: module anchors → openLogCard via navToAnchor
+navLinks.forEach(function(a) {
+  a.addEventListener('click', function(e) {
+    var anchor = a.getAttribute('data-anchor');
+    if (!anchor) return;
+    e.preventDefault();
+    navToAnchor(anchor);
+  });
+});
+
+function getActiveAnchor() {
+  var scrollY = window.scrollY + headerH + 30;
+  var active  = null;
+  sections.forEach(function(sec) {
+    if (sec.offsetTop <= scrollY) { active = sec.id; }
+  });
+  return active;
+}
+function setActiveLink(anchor) {
+  navLinks.forEach(function(a) {
+    if (a.getAttribute('data-anchor') === anchor) {
+      a.classList.add('active');
+      ensureParentOpen(a);
+    } else {
+      a.classList.remove('active');
+    }
+  });
+  // Header nav
+  document.querySelectorAll('.hn-link').forEach(function(a) {
+    a.classList.toggle('hn-active', a.getAttribute('href') === '#' + anchor);
+  });
+}
+
+var ticking = false;
+window.addEventListener('scroll', function() {
+  if (!ticking) {
+    requestAnimationFrame(function() {
+      setActiveLink(getActiveAnchor());
+      document.getElementById('back-to-top').classList.toggle('visible', window.scrollY > 300);
+      ticking = false;
+    });
+    ticking = true;
+  }
+});
+
+document.getElementById('back-to-top').addEventListener('click', function() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// --- References panel toggle ---
+var refsToggleBtn = document.getElementById('refs-toggle');
+var refsListEl    = document.getElementById('refs-list');
+
+function _refsIsOpen() {
+  return refsListEl && refsListEl.style.display !== 'none';
+}
+function _refsOpen() {
+  if (!refsListEl) return;
+  refsListEl.style.display = 'block';
+  if (refsToggleBtn) refsToggleBtn.classList.add('open');
+}
+function _refsClose() {
+  if (!refsListEl) return;
+  refsListEl.style.display = 'none';
+  if (refsToggleBtn) refsToggleBtn.classList.remove('open');
+}
+
+if (refsToggleBtn && refsListEl) {
+  refsToggleBtn.addEventListener('click', function() {
+    _refsIsOpen() ? _refsClose() : _refsOpen();
+  });
+}
+
+// Header "References" button → true toggle + scroll sidebar to bottom when opening
+var refsHeaderBtn = document.getElementById('refs-header-btn');
+if (refsHeaderBtn) {
+  refsHeaderBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    var sidebar = document.getElementById('sidebar');
+    if (_refsIsOpen()) {
+      _refsClose();
+    } else {
+      _refsOpen();
+      if (sidebar) setTimeout(function() {
+        sidebar.scrollTo({ top: sidebar.scrollHeight, behavior: 'smooth' });
+      }, 50);
+    }
+  });
+}
+
+// --- Theme toggle (dark / light) ---
+(function() {
+  var btn    = document.getElementById('theme-toggle');
+  var icon   = btn  ? btn.querySelector('.th-icon')  : null;
+  var label  = btn  ? btn.querySelector('.th-label') : null;
+  var stored = localStorage.getItem('tuxaudit-theme');
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      document.body.classList.add('light');
+      if (icon)  icon.innerHTML  = '&#9728;';   /* ☀ sun */
+      if (label) label.textContent = 'Dark';
+    } else {
+      document.body.classList.remove('light');
+      if (icon)  icon.innerHTML  = '&#9790;';   /* ☾ crescent */
+      if (label) label.textContent = 'Light';
+    }
+    localStorage.setItem('tuxaudit-theme', theme);
+  }
+
+  /* Restore saved preference */
+  applyTheme(stored === 'light' ? 'light' : 'dark');
+
+  if (btn) {
+    btn.addEventListener('click', function() {
+      var isLight = document.body.classList.contains('light');
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+  }
+})();
+
+// =====================================================================
+// RADAR CHART — RPG Skill Tree
+// =====================================================================
+(function() {
+  var canvas  = document.getElementById('radar-canvas');
+  if (!canvas) return;
+  var ctx     = canvas.getContext('2d');
+  var tooltip = document.getElementById('radar-tooltip');
+  var W = canvas.width, H = canvas.height;
+  var cx = W / 2, cy = H / 2;
+  var R = Math.min(W, H) / 2 - 48;   // outer ring radius
+
+  // Read data from data-attributes
+  var rawScores  = canvas.getAttribute('data-scores').split(',').map(Number);
+  var rawLabels  = canvas.getAttribute('data-labels').split(',');
+  var N = rawScores.length;
+
+  // Parse labels: "Name|anchor"
+  var domainNames   = rawLabels.map(function(l){ return l.split('|')[0]; });
+  var domainAnchors = rawLabels.map(function(l){ return l.split('|')[1] || ''; });
+  var domainIssues  = [];  // will be populated from dl-items
+  document.querySelectorAll('.dl-item').forEach(function(el, i) {
+    var tip = el.querySelector('.dl-tip');
+    domainIssues[i] = tip ? tip.textContent : '';
+  });
+
+  var isDark = !document.body.classList.contains('light');
+
+  function getCSSVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function colors() {
+    isDark = !document.body.classList.contains('light');
+    return {
+      bg:      isDark ? '#0d1117' : '#f6f8fa',
+      bg3:     isDark ? '#21262d' : '#f0f2f5',
+      border:  isDark ? '#30363d' : '#d0d7de',
+      dim:     isDark ? '#8b949e' : '#57606a',
+      text:    isDark ? '#c9d1d9' : '#1f2328',
+      accent:  isDark ? '#58a6ff' : '#0969da',
+    };
+  }
+
+  // Score → colour (centre=red, edge=green)
+  function scoreColor(s) {
+    // s: 0-10
+    var t = s / 10;
+    // interpolate red(0) → orange(0.5) → green(1)
+    var r, g, b;
+    if (t < 0.5) {
+      var u = t / 0.5;
+      r = Math.round(248 - (248-210)*u);
+      g = Math.round(81  + (153-81)*u);
+      b = Math.round(73  + (34-73)*u);
+    } else {
+      var u = (t - 0.5) / 0.5;
+      r = Math.round(210 - (210-63)*u);
+      g = Math.round(153 + (185-153)*u);
+      b = Math.round(34  + (80-34)*u);
+    }
+    return 'rgb('+r+','+g+','+b+')';
+  }
+
+  // Compute polygon point for domain i at radius r
+  function point(i, r) {
+    var angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+    return {
+      x: cx + r * Math.cos(angle),
+      y: cy + r * Math.sin(angle)
+    };
+  }
+
+  // Store clickable node positions for hit-testing
+  var nodePositions = [];
+
+  function draw() {
+    var C = colors();
+    ctx.clearRect(0, 0, W, H);
+
+    var levels = 10;
+
+    // ---- Background rings (levels 1-10) ----
+    for (var lv = 1; lv <= levels; lv++) {
+      var r = R * lv / levels;
+      ctx.beginPath();
+      for (var i = 0; i < N; i++) {
+        var p = point(i, r);
+        i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      // Subtle fill gradient from center (red) to edge (green)
+      var t = lv / levels;
+      var alpha = 0.04 + t * 0.03;
+      ctx.fillStyle = lv <= 4 ? 'rgba(248,81,73,'+alpha+')'
+                   : lv <= 7 ? 'rgba(210,153,34,'+alpha+')'
+                              : 'rgba(63,185,80,'+alpha+')';
+      ctx.fill();
+      ctx.strokeStyle = C.border;
+      ctx.lineWidth   = lv === 10 ? 1.5 : 0.5;
+      ctx.setLineDash(lv === 10 ? [] : [3, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Ring level number (1,3,5,7,10 only)
+      if (lv === 1 || lv === 3 || lv === 5 || lv === 7 || lv === 10) {
+        ctx.fillStyle  = C.dim;
+        ctx.font       = '9px monospace';
+        ctx.textAlign  = 'center';
+        ctx.fillText(lv, cx + 4, cy - r + 10);
+      }
+    }
+
+    // ---- Spokes (axes) ----
+    for (var i = 0; i < N; i++) {
+      var pOuter = point(i, R);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(pOuter.x, pOuter.y);
+      ctx.strokeStyle = C.border;
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+    }
+
+    // ---- Filled polygon (scores) ----
+    ctx.beginPath();
+    for (var i = 0; i < N; i++) {
+      var r  = R * rawScores[i] / 10;
+      var p  = point(i, r);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    // Gradient fill based on avg score
+    var avgScore = rawScores.reduce(function(a,b){return a+b},0)/N;
+    var fillCol  = scoreColor(avgScore);
+    var gradFill = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+    gradFill.addColorStop(0,   'rgba(248,81,73,0.35)');
+    gradFill.addColorStop(0.5, 'rgba(210,153,34,0.25)');
+    gradFill.addColorStop(1,   'rgba(63,185,80,0.20)');
+    ctx.fillStyle   = gradFill;
+    ctx.fill();
+    ctx.strokeStyle = fillCol;
+    ctx.lineWidth   = 2;
+    ctx.shadowColor = fillCol;
+    ctx.shadowBlur  = 6;
+    ctx.stroke();
+    ctx.shadowBlur  = 0;
+
+    // ---- Nodes (dots) on each spoke ----
+    nodePositions = [];
+    for (var i = 0; i < N; i++) {
+      var r  = R * rawScores[i] / 10;
+      var p  = point(i, r);
+      var nc = scoreColor(rawScores[i]);
+
+      nodePositions.push({ x: p.x, y: p.y, index: i, r: 7 });
+
+      // Glow ring
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
+      ctx.fillStyle = nc.replace('rgb', 'rgba').replace(')', ',0.18)');
+      ctx.fill();
+      // Dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle   = nc;
+      ctx.shadowColor = nc;
+      ctx.shadowBlur  = 8;
+      ctx.fill();
+      ctx.strokeStyle = isDark ? '#0d1117' : '#ffffff';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+      ctx.shadowBlur  = 0;
+    }
+
+    // ---- Labels ----
+    var labelR = R + 22;
+    for (var i = 0; i < N; i++) {
+      var p    = point(i, labelR);
+      var s    = rawScores[i];
+      var nc   = scoreColor(s);
+      var name = domainNames[i];
+
+      // Short name if too long
+      if (name.length > 10) name = name.substring(0, 9) + '…';
+
+      ctx.font      = 'bold 10px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = nc;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Background pill for legibility
+      var tw  = ctx.measureText(name).width + 8;
+      ctx.fillStyle = isDark ? 'rgba(13,17,23,0.75)' : 'rgba(246,248,250,0.85)';
+      ctx.beginPath();
+      ctx.roundRect(p.x - tw/2, p.y - 7, tw, 14, 4);
+      ctx.fill();
+
+      ctx.fillStyle = nc;
+      ctx.fillText(name, p.x, p.y);
+    }
+  }
+
+  draw();
+
+  // Redraw on theme toggle
+  document.getElementById('theme-toggle') && document.getElementById('theme-toggle').addEventListener('click', function() {
+    setTimeout(draw, 30);
+  });
+
+  // ---- Tooltip & hover ----
+  var hoveredIndex = -1;
+
+  canvas.addEventListener('mousemove', function(e) {
+    var rect  = canvas.getBoundingClientRect();
+    var mx    = (e.clientX - rect.left) * (W / rect.width);
+    var my    = (e.clientY - rect.top)  * (H / rect.height);
+    var found = -1;
+
+    for (var i = 0; i < nodePositions.length; i++) {
+      var np = nodePositions[i];
+      var dx = mx - np.x, dy = my - np.y;
+      if (Math.sqrt(dx*dx + dy*dy) <= np.r + 6) { found = i; break; }
+    }
+
+    if (found !== hoveredIndex) {
+      hoveredIndex = found;
+      draw();  // redraw to highlight
+      if (found >= 0) {
+        // Redraw with highlight ring
+        var np = nodePositions[found];
+        var nc = scoreColor(rawScores[found]);
+        ctx.beginPath();
+        ctx.arc(np.x, np.y, 11, 0, Math.PI * 2);
+        ctx.strokeStyle = nc;
+        ctx.lineWidth   = 2;
+        ctx.shadowColor = nc;
+        ctx.shadowBlur  = 12;
+        ctx.stroke();
+        ctx.shadowBlur  = 0;
+        canvas.style.cursor = 'pointer';
+      } else {
+        canvas.style.cursor = 'crosshair';
+      }
+    }
+
+    if (found >= 0) {
+      var s   = rawScores[found];
+      var nc  = scoreColor(s);
+      var lbl = s <= 4 ? 'Critical' : s <= 7 ? 'Warning' : 'Good';
+      var iss = domainIssues[found] || 'No issue detected';
+      tooltip.innerHTML =
+        "<span class='rt-name'>" + domainNames[found] + "</span>" +
+        "<span class='rt-score' style='color:" + nc + "'>" + s + " / 10 — " + lbl + "</span>" +
+        "<span class='rt-issues'>" + iss.replace(/\n/g,'<br>') + "</span>" +
+        "<span class='rt-issues' style='margin-top:4px;display:block;color:var(--accent)'>↗ Click to view remediation</span>";
+      tooltip.style.display = 'block';
+      tooltip.style.left    = (e.clientX + 14) + 'px';
+      tooltip.style.top     = (e.clientY - 10) + 'px';
+      // Keep tooltip in viewport
+      var tr = tooltip.getBoundingClientRect();
+      if (tr.right > window.innerWidth - 10)
+        tooltip.style.left = (e.clientX - tr.width - 14) + 'px';
+    } else {
+      tooltip.style.display = 'none';
+    }
+  });
+
+  canvas.addEventListener('mouseleave', function() {
+    tooltip.style.display = 'none';
+    hoveredIndex = -1;
+    draw();
+  });
+
+  // Click → navigate to remediation section filtered by domain
+  canvas.addEventListener('click', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx   = (e.clientX - rect.left) * (W / rect.width);
+    var my   = (e.clientY - rect.top)  * (H / rect.height);
+    for (var i = 0; i < nodePositions.length; i++) {
+      var np = nodePositions[i];
+      var dx = mx - np.x, dy = my - np.y;
+      if (Math.sqrt(dx*dx + dy*dy) <= np.r + 6) {
+        var domainName = domainNames[i];
+        // Find first rem-card matching this domain category
+        var firstCard = null;
+        document.querySelectorAll('.rem-card').forEach(function(card) {
+          if (firstCard) return;
+          var catEl = card.querySelector('.rem-cat');
+          if (catEl && catEl.textContent.toLowerCase() === domainName.toLowerCase()) {
+            firstCard = card;
+          }
+        });
+        if (firstCard) {
+          // Scroll directly to that card
+          var top = firstCard.getBoundingClientRect().top + window.scrollY - headerH - 12;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+          setActiveLink('remediation');
+          // Highlight all cards for this domain
+          setTimeout(function(name) {
+            document.querySelectorAll('.rem-card').forEach(function(card) {
+              var catEl = card.querySelector('.rem-cat');
+              if (catEl && catEl.textContent.toLowerCase() === name.toLowerCase()) {
+                card.style.outline = '2px solid var(--accent)';
+                card.style.outlineOffset = '2px';
+                setTimeout(function(){ card.style.outline=''; card.style.outlineOffset=''; }, 2500);
+              }
+            });
+          }, 400, domainName);
+        } else {
+          // No remediation card for this domain — scroll to remediation section
+          navToAnchor('remediation');
+        }
+        break;
+      }
+    }
+  });
+})();
+
+// --- Logo: scroll to top + open all groups ---
+var logoHome = document.getElementById('logo-home');
+if (logoHome) {
+  logoHome.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setActiveLink('dashboard');
+    // Close all sidebar groups
+    document.querySelectorAll('.cat-toggle').forEach(function(btn) {
+      closeGroup(btn, document.getElementById(btn.getAttribute('data-target')));
+    });
+  });
+}
+
+// --- Sidebar collapse toggle (desktop) + hamburger (mobile) ---
+var sidebar      = document.getElementById('sidebar');
+var collapseBtn  = document.getElementById('sidebar-collapse-btn');
+var content      = document.getElementById('content');
+var hamburger    = document.getElementById('hamburger');
+var mobileOverlay= document.getElementById('mobile-overlay');
+var sidebarOpen  = true;
+var isMobile     = function(){ return window.innerWidth <= 768; };
+
+function setSidebarState(open) {
+  sidebarOpen = open;
+  if (isMobile()) {
+    if (open) {
+      sidebar.classList.add('mobile-open');
+      hamburger && hamburger.classList.add('open');
+      mobileOverlay && mobileOverlay.classList.add('visible');
+    } else {
+      sidebar.classList.remove('mobile-open');
+      hamburger && hamburger.classList.remove('open');
+      mobileOverlay && mobileOverlay.classList.remove('visible');
+    }
+  } else {
+    if (open) {
+      sidebar.classList.remove('collapsed');
+      content.classList.remove('sidebar-hidden');
+      collapseBtn && collapseBtn.classList.remove('collapsed');
+      if (collapseBtn) { collapseBtn.style.left='calc(var(--sidebar-w) - 14px)'; collapseBtn.innerHTML='&#8249;'; collapseBtn.title='Collapse sidebar'; }
+    } else {
+      sidebar.classList.add('collapsed');
+      content.classList.add('sidebar-hidden');
+      collapseBtn && collapseBtn.classList.add('collapsed');
+      if (collapseBtn) { collapseBtn.style.left='0px'; collapseBtn.innerHTML='&#8250;'; collapseBtn.title='Open sidebar'; }
+    }
+  }
+}
+
+if (collapseBtn) collapseBtn.addEventListener('click', function(){ setSidebarState(!sidebarOpen); });
+if (hamburger)   hamburger.addEventListener('click',   function(){ setSidebarState(!sidebarOpen); });
+if (mobileOverlay) mobileOverlay.addEventListener('click', function(){ setSidebarState(false); });
+
+// Close mobile sidebar when a nav link is clicked
+document.querySelectorAll('.nav-link').forEach(function(a){
+  a.addEventListener('click', function(){ if(isMobile()) setSidebarState(false); });
+});
+
+// --- Log card footers + title colouring based on remediation priority ---
+(function() {
+  // Colour map: priority → [border-left color, log-name color]
+  var PRIO_COLORS = {
+    p1: { border: '#f85149', name: '#f85149' },  // Critical — red
+    p2: { border: '#d29922', name: '#d29922' },  // High — orange
+    p3: { border: '#58a6ff', name: '#58a6ff' },  // Medium — blue
+  };
+
+  document.querySelectorAll('.log-footer-check').forEach(function(div) {
+    var cat = div.getAttribute('data-remcat');
+    if (!cat) return;
+
+    var matches = [];
+    document.querySelectorAll('.rem-card').forEach(function(card) {
+      var catEl = card.querySelector('.rem-cat');
+      if (catEl && catEl.textContent.trim().toLowerCase() === cat.toLowerCase()) {
+        matches.push(card);
+      }
+    });
+
+    // Find the card header and name to colour
+    var logCard   = div.closest('.log-card');
+    var logHeader = logCard ? logCard.querySelector('.log-card-header') : null;
+    var logName   = logCard ? logCard.querySelector('.log-name') : null;
+
+    if (matches.length > 0) {
+      // Determine worst priority (p1 > p2 > p3)
+      var worst = 'p3';
+      matches.forEach(function(c) {
+        if (c.classList.contains('p1')) worst = 'p1';
+        else if (c.classList.contains('p2') && worst !== 'p1') worst = 'p2';
+      });
+      var colors = PRIO_COLORS[worst];
+
+      // Colour the card header left border and the title
+      if (logHeader) logHeader.style.borderLeftColor = colors.border;
+      if (logName)   logName.style.color = colors.name;
+
+      // Count by priority
+      var p1=0, p2=0, p3=0;
+      matches.forEach(function(c) {
+        if (c.classList.contains('p1')) p1++;
+        else if (c.classList.contains('p2')) p2++;
+        else p3++;
+      });
+      var parts = [];
+      if (p1) parts.push('<span style="color:#f85149;font-weight:700">' + p1 + ' Critical</span>');
+      if (p2) parts.push('<span style="color:#d29922;font-weight:700">' + p2 + ' High</span>');
+      if (p3) parts.push('<span style="color:#58a6ff;font-weight:700">' + p3 + ' Medium</span>');
+
+      div.innerHTML =
+        '<div class="log-footer-rem" onclick="(function(){' +
+          'var first=null;' +
+          'document.querySelectorAll(\'.rem-card\').forEach(function(c){' +
+            'if(first)return;' +
+            'var e=c.querySelector(\'.rem-cat\');' +
+            'if(e&&e.textContent.trim().toLowerCase()===\'' + cat.toLowerCase() + '\')first=c;' +
+          '});' +
+          'if(first){' +
+            'var top=first.getBoundingClientRect().top+window.scrollY-' + 'document.getElementById(\'header\').offsetHeight-12;' +
+            'window.scrollTo({top:top,behavior:\'smooth\'});' +
+            'setActiveLink(\'remediation\');' +
+            'setTimeout(function(){' +
+              'document.querySelectorAll(\'.rem-card\').forEach(function(c){' +
+                'var e=c.querySelector(\'.rem-cat\');' +
+                'if(e&&e.textContent.trim().toLowerCase()===\'' + cat.toLowerCase() + '\'){' +
+                  'c.style.outline=\'2px solid var(--accent)\';' +
+                  'c.style.outlineOffset=\'2px\';' +
+                  'setTimeout(function(){c.style.outline=\'\';c.style.outlineOffset=\'\';},2500);' +
+                '}' +
+              '});' +
+            '},400);' +
+          '}' +
+        '})()">' +
+        '<span class="lf-icon">&#9888;</span>' +
+        '<span class="lf-text"><strong>' + matches.length + ' remediation action' + (matches.length>1?'s':'') + ' — ' + cat + '</strong>' +
+          parts.join(' &nbsp; ') +
+        '</span>' +
+        '<span class="lf-arrow">&#8594; View in Remediation Plan</span>' +
+        '</div>';
+    } else {
+      // No remediation — keep violet (default CSS), show all-clear
+      div.innerHTML =
+        '<div class="log-footer-ok">' +
+        '<span class="lf-icon">&#10003;</span>' +
+        '<span class="lf-text"><strong>No automated finding for this module</strong>' +
+          'Automated analysis detected no issue — manual review is still recommended.' +
+        '</span></div>';
+    }
+  });
+})();
+
+// --- Log card toggle: sync with sidebar nav-dot ---
+function setLogDot(anchor, isOpen) {
+  var dot = document.querySelector('.nav-dot[data-dot="' + anchor + '"]');
+  if (!dot) return;
+  if (isOpen) {
+    dot.classList.add('dot-open');
+    dot.classList.remove('dot-seen');
+    dot.title = 'Open';
+  } else {
+    dot.classList.remove('dot-open');
+    dot.classList.add('dot-seen');
+    dot.title = 'Seen';
+  }
+}
+
+// --- Log CATEGORY group toggle: bidirectional sync with sidebar cat-toggle ---
+function openLogCat(catId) {
+  var grp = document.getElementById('log-cat-' + catId);
+  if (grp) grp.classList.add('open');
+  // Sync sidebar: open matching cat-toggle group
+  var ul  = document.getElementById('cat-' + catId);
+  var btn = document.querySelector('.cat-toggle[data-target="cat-' + catId + '"]');
+  if (ul && btn && !ul.classList.contains('open')) openGroup(btn, ul);
+}
+function closeLogCat(catId) {
+  var grp = document.getElementById('log-cat-' + catId);
+  if (grp) grp.classList.remove('open');
+  // Sync sidebar: close matching cat-toggle group
+  var ul  = document.getElementById('cat-' + catId);
+  var btn = document.querySelector('.cat-toggle[data-target="cat-' + catId + '"]');
+  if (ul && btn && ul.classList.contains('open')) closeGroup(btn, ul);
+}
+
+document.querySelectorAll('.log-cat-header[data-logcat]').forEach(function(hdr) {
+  hdr.addEventListener('click', function() {
+    var catId = hdr.getAttribute('data-logcat');
+    var grp   = hdr.parentElement;
+    if (grp.classList.contains('open')) { closeLogCat(catId); }
+    else { openLogCat(catId); }
+  });
+});
+
+// Sidebar cat-toggle: toggle the group AND sync log category group
+document.querySelectorAll('.cat-toggle').forEach(function(btn) {
+  var ul     = document.getElementById(btn.getAttribute('data-target'));
+  var catId  = (btn.getAttribute('data-target') || '').replace(/^cat-/, '');
+  btn.addEventListener('click', function() {
+    if (ul && ul.classList.contains('open')) {
+      closeGroup(btn, ul);
+      // Sync: close matching log-cat group (without re-triggering sidebar)
+      var grp = document.getElementById('log-cat-' + catId);
+      if (grp) grp.classList.remove('open');
+    } else {
+      openGroup(btn, ul);
+      // Sync: open matching log-cat group
+      var grp = document.getElementById('log-cat-' + catId);
+      if (grp) grp.classList.add('open');
+    }
+  });
+});
+
+document.querySelectorAll('.log-card-header[data-logid]').forEach(function(hdr) {
+  hdr.addEventListener('click', function() {
+    var card   = hdr.parentElement;
+    var anchor = hdr.getAttribute('data-logid');
+    var isOpen = card.classList.toggle('open');
+    setLogDot(anchor, isOpen);
+    if (isOpen) {
+      var navLink = document.querySelector('.nav-link[data-anchor="' + anchor + '"]');
+      if (navLink) ensureParentOpen(navLink);
+    }
+  });
+});
+
+// openLogCard already calls setLogDot internally
+
+// Init
+setActiveLink('dashboard');
+</script>
+</body>
+</html>
