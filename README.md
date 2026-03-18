@@ -4,8 +4,8 @@
 
 ---
 
-<a href="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/bash.jpg">
-  <img src="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/bash.jpg"
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/bash.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/bash.jpg"
        alt="TuxAudit Menu"
        width="500">
 </a>
@@ -20,8 +20,8 @@ The script contains **no write, modify, or exploitation commands**. It relies ex
 
 ### Dashboard
 
-<a href="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Dashboard.jpg">
-  <img src="https://raw.githubusercontent.com/YOUR_USER/TuxAudit/refs/heads/main/Image/Dashboard.jpg"
+<a href="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Security_dashboard.jpg">
+  <img src="https://raw.githubusercontent.com/Anadema/TuxAudit/refs/heads/main/Images/Security_dashboard.jpg"
        alt="TuxAudit Dashboard"
        width="900">
 </a>
